@@ -1,7 +1,8 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/dbConnection.config.js';
 
-const Designation = sequelize.define('designation',
+const Designation = sequelize.define(
+  'designation',
   {
     designationId: {
       type: DataTypes.INTEGER,
@@ -18,7 +19,5 @@ const Designation = sequelize.define('designation',
   }
 );
 
-
 Designation.sync();
 export default Designation;
-
