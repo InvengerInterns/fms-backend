@@ -7,3 +7,4 @@ const router = express.Router();
 router.post('/add-user', registerUser);
 
 export default router;
+

@@ -64,4 +64,40 @@ const registerUser = async (req, res) => {
   }
 };
 
-export { registerUser };
+// Function to delete user by employee ID
+const deleteUserByEmployeeId = async (req, res) => {
+  const { employeeId } = req.params; // Assuming employeeId is passed as a URL parameter
+
+  try {
+    const existingUser = await User.findOne({
+      where: {
+        employeeId: employeeId,
+      },
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({
+        message: 'User with this Employee ID does not exist!!',
+      });
+    }
+
+    await User.destroy({
+      where: {
+        employeeId: employeeId,
+      },
+    });
+
+    return res.status(200).json({
+      message: 'User deleted successfully.',
+    });
+
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return res.status(500).json({
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+
+export { registerUser,deleteUserByEmployeeId };
