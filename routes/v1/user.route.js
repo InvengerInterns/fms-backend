@@ -12,3 +12,4 @@ router.post('/add-user', registerUser);
 router.get('/get-user/:employeeId', getUserByEmployeeId);
 
 export default router;
+
