@@ -90,6 +90,8 @@ const getUserByEmployeeId = async (req, res) => {
     
   } catch (error) {
     console.error('Error fetching user:', error);
+  }
+}
 
 // Function to delete user by employee ID
 const deleteUserByEmployeeId = async (req, res) => {
@@ -127,4 +129,3 @@ const deleteUserByEmployeeId = async (req, res) => {
 };
 
 export { registerUser,getUserByEmployeeId,deleteUserByEmployeeId };
-
