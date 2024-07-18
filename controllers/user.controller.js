@@ -49,7 +49,7 @@ const registerUser = async (req, res) => {
       userEmail: email,
       userPassword: hashedPassword,
       userRole: role,
-      employeeId: employeeId,
+      userEmployeeId: employeeId,
     });
 
     await newUser.save();
@@ -64,4 +64,67 @@ const registerUser = async (req, res) => {
   }
 };
 
-export { registerUser };
+//Get User By EmployeeId
+const getUserByEmployeeId = async (req, res) => {
+  const { employeeId } = req.params;
+  try {
+    const existingUserById = await User.findOne({
+      where: {
+        userEmployeeId: employeeId,
+      },
+    });
+
+    if (existingUserById.length == 0) {
+      return res.status(404).json({
+        message: 'No user found with this Employee ID.',
+      });
+    }
+
+    return res.status(200).json({
+      data: {
+        email: existingUserById.userEmail,
+        role: existingUserById.userRole,
+        employeeNumber: existingUserById.employeeId,
+      },
+    });
+    
+  } catch (error) {
+    console.error('Error fetching user:', error);
+
+// Function to delete user by employee ID
+const deleteUserByEmployeeId = async (req, res) => {
+  const { employeeId } = req.params; // Assuming employeeId is passed as a URL parameter
+
+  try {
+    const existingUser = await User.findOne({
+      where: {
+        employeeId: employeeId,
+      },
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({
+        message: 'User with this Employee ID does not exist!!',
+      });
+    }
+
+    await User.destroy({
+      where: {
+        employeeId: employeeId,
+      },
+    });
+
+    return res.status(200).json({
+      message: 'User deleted successfully.',
+    });
+
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return res.status(500).json({
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+export { registerUser,getUserByEmployeeId,deleteUserByEmployeeId };
+
