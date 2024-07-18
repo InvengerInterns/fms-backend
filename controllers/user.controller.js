@@ -49,7 +49,7 @@ const registerUser = async (req, res) => {
       userEmail: email,
       userPassword: hashedPassword,
       userRole: role,
-      employeeId: employeeId,
+      userEmployeeId: employeeId,
     });
 
     await newUser.save();
@@ -64,4 +64,36 @@ const registerUser = async (req, res) => {
   }
 };
 
-export { registerUser };
+//Get User By EmployeeId
+const getUserByEmployeeId = async (req, res) => {
+  const { employeeId } = req.params;
+  try {
+    const existingUserById = await User.findOne({
+      where: {
+        userEmployeeId: employeeId,
+      },
+    });
+
+    if (existingUserById.length == 0) {
+      return res.status(404).json({
+        message: 'No user found with this Employee ID.',
+      });
+    }
+
+    return res.status(200).json({
+      data: {
+        email: existingUserById.userEmail,
+        role: existingUserById.userRole,
+        employeeNumber: existingUserById.employeeId,
+      },
+    });
+    
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return res.status(500).json({
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+export { registerUser, getUserByEmployeeId };
