@@ -1,1 +1,1 @@
-console.log('model index')
+console.log('model index');
