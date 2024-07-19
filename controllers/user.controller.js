@@ -1,10 +1,13 @@
 import {
   checkPassword,
+  prepareOtp,
   hashPassword,
   isValidPassword,
   signToken,
 } from '../middlewares/auth.middleware.js';
 import User from '../models/user.model.js';
+
+const userOTPMap = new Map();
 
 //Login User
 const loginUser = async (req, res) => {
@@ -237,6 +240,46 @@ const createPassword = async (req, res) => {
   }
 };
 
+//Send OTP
+const sendOtp = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const otp = await prepareOtp();
+    userOTPMap.set(email, otp);
+    console.log(userOTPMap);
+    res.status(200).json({ message: 'OTP sent to your email.' });
+  } catch (error) {
+    res.status(400).json({ message: 'OTP sending failed.' });
+    throw error;
+  }
+};
+
+//Verify Otp
+const verifyOtp = async (req, res) => {
+  const { email } = req.params;
+  const { otp } = req.body;
+  const storedOtp = userOTPMap.get(email);
+
+  try {
+    if (storedOtp === otp) {
+      res.status(200).json({
+        status: 'sucess',
+        message: 'Password has been reset successfully.',
+      });
+    } else {
+      res.status(400).json({
+        status: 'failed',
+        message: 'Wrong OTP!!!!',
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      status: 'failed',
+      message: 'Failed To verify',
+    });
+  }
+};
+
 //Logout
 const logoutUser = async (req, res) => {
   try {
@@ -259,4 +302,6 @@ export {
   addUserWithEmployeeId,
   loginUser,
   logoutUser,
+  sendOtp,
+  verifyOtp,
 };

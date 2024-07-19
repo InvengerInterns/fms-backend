@@ -6,6 +6,8 @@ import {
   deleteUserByEmployeeId,
   loginUser,
   logoutUser,
+  sendOtp,
+  verifyOtp,
 } from '../../controllers/user.controller.js';
 
 const router = express.Router();
@@ -22,5 +24,9 @@ router.get('/get-user/:employeeId', getUserByEmployeeId);
 router.put('/delete-user/:employeeId', deleteUserByEmployeeId);
 //Logout User
 router.post('/logout-user', logoutUser);
+//Send OTP via Mail
+router.post('/send-otp', sendOtp);
+//Verify OTP
+router.post('/verify-otp/:email', verifyOtp);
 
 export default router;

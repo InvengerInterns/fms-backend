@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -72,4 +73,28 @@ const checkPassword = async (reqPassword, userPassword) => {
   }
 };
 
-export { hashPassword, isValidPassword, signToken, verifyToken, checkPassword };
+//Generate OTP
+const generateOtp = async () => {
+  return crypto.randomBytes(3).toString('hex');
+};
+
+//Prepare OTP [add mail body here]
+const prepareOtp = async () => {
+  const otp = await generateOtp();
+  console.log(otp);
+
+  try {
+    return otp;
+  } catch (error) {
+    res.status(500).json({ message: `Error Occurred: ${error.message}` });
+  }
+};
+
+export {
+  hashPassword,
+  isValidPassword,
+  signToken,
+  verifyToken,
+  checkPassword,
+  prepareOtp,
+};
