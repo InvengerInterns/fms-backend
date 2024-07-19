@@ -52,4 +52,21 @@ const deleteBusinessUnit = async (req, res) => {
   }
 };
 
-export { createBusinessUnit, updateBusinessUnit, deleteBusinessUnit };
+// Display all business units
+const getBusinessUnits = async (req, res) => {
+  try {
+    const businessUnits = await BusinessUnit.findAll({
+      attributes: ['businessId', 'businessName'],
+    });
+    res.json(businessUnits);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching business units', error });
+  }
+};
+
+export {
+  createBusinessUnit,
+  updateBusinessUnit,
+  deleteBusinessUnit,
+  getBusinessUnits,
+};

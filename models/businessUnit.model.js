@@ -12,6 +12,10 @@ const BusinessUnit = sequelize.define(
     businessName: {
       type: DataTypes.STRING,
     },
+    buisnessUnitStatus: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+    },
   },
   {
     timestamps: true,
