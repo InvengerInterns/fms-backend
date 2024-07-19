@@ -83,7 +83,7 @@ const deleteUserByEmployeeId = async (req, res) => {
   try {
     const existingUser = await User.findOne({
       where: {
-        employeeId: employeeId,
+        userEmployeeId: employeeId,
       },
     });
 
@@ -93,17 +93,21 @@ const deleteUserByEmployeeId = async (req, res) => {
       });
     }
 
-    await User.destroy({
-      where: {
-        employeeId: employeeId,
-      },
-    });
+    // Update the user's status
+    await User.update(
+      { userStatus: 0 },
+      {
+        where: {
+          userEmployeeId: employeeId,
+        },
+      }
+    );
 
     return res.status(200).json({
-      message: 'User deleted successfully.',
+      message: 'User status updated successfully.',
     });
   } catch (error) {
-    console.error('Error deleting user:', error);
+    console.error('Error updating user status:', error);
     return res.status(500).json({
       message: 'Internal Server Error',
     });
