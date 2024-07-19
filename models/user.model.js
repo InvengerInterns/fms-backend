@@ -23,6 +23,10 @@ const User = sequelize.define(
     userEmployeeId: {
       type: DataTypes.INTEGER,
     },
+    userStatus: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+    },
   },
   { timeStamp: true }
 );

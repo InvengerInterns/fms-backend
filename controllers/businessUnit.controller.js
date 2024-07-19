@@ -1,7 +1,7 @@
-import BusinessUnit from './BusinessUnit.model.js';
+import BusinessUnit from '../models/businessUnit.model.js';
 
 // Create a new business unit
-export const createBusinessUnit = async (req, res) => {
+const createBusinessUnit = async (req, res) => {
   try {
     const { businessName } = req.body;
     const newBusinessUnit = await BusinessUnit.create({ businessName });
@@ -16,11 +16,18 @@ const updateBusinessUnit = async (req, res) => {
   try {
     const { id } = req.params;
     const { businessName } = req.body;
-    const businessUnit = await BusinessUnit.findByPk(id);
+    const businessUnit = await BusinessUnit.findOne({
+      where: {
+        businessId: id,
+      },
+    });
+
+    console.log(businessUnit);
+
     if (businessUnit) {
       businessUnit.businessName = businessName;
       await businessUnit.save();
-      res.json({ message: 'updated successfully', data: buisnessUnit });
+      res.json({ message: 'updated successfully', data: businessUnit });
     } else {
       res.status(404).json({ message: 'Business Unit not found' });
     }
@@ -45,4 +52,21 @@ const deleteBusinessUnit = async (req, res) => {
   }
 };
 
-export { createBusinessUnit, updateBusinessUnit, deleteBusinessUnit };
+// Display all business units
+const getBusinessUnits = async (req, res) => {
+  try {
+    const businessUnits = await BusinessUnit.findAll({
+      attributes: ['businessId', 'businessName'],
+    });
+    res.json(businessUnits);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching business units', error });
+  }
+};
+
+export {
+  createBusinessUnit,
+  updateBusinessUnit,
+  deleteBusinessUnit,
+  getBusinessUnits,
+};
