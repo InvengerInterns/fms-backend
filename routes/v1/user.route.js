@@ -3,7 +3,7 @@ import {
   registerUser,
   getUserByEmployeeId,
   createPassword,
-  deleteUserByEmployeeId,
+  deleteUserByEmployeeId
 } from '../../controllers/user.controller.js';
 
 const router = express.Router();
