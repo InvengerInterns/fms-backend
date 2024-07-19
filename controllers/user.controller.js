@@ -6,7 +6,7 @@ import User from '../models/user.model.js';
 
 //Registering User
 const registerUser = async (req, res) => {
-  const { email,role, employeeId } = req.body;
+  const { email, role, employeeId } = req.body;
 
   try {
     if (!email.endsWith('@invenger.com')) {
@@ -141,9 +141,9 @@ const createPassword = async (req, res) => {
       }
     );
 
-    res.status(201).json({message:'Password Created Successfully'});
+    res.status(201).json({ message: 'Password Created Successfully' });
   } catch (error) {
-    res.status(500).json({message:'Internal Server Error'});
+    res.status(500).json({ message: 'Internal Server Error' });
     throw error;
   }
 };
