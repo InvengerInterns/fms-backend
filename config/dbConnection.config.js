@@ -10,6 +10,7 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     dialect: 'mysql',
+    logging: false,
     pool: {
       max: 1000, // Maximum number of connection in pool
       min: 0, // Minimum number of connection in pool
