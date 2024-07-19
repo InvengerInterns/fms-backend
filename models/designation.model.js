@@ -13,6 +13,10 @@ const Designation = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    designationStatus: {
+      type: DataTypes.INTEGER,
+      defaultValue:1
+    },
   },
   {
     timestamps: true,

@@ -13,6 +13,15 @@ const ClientDetails = sequelize.define(
       type: DataTypes.STRING(64),
       allowNull: true,
     },
+    clientDetailsStatus: {
+        type: DataTypes.INTEGER,
+        defaultValue:1
+      },                                                    
+   
+  businessId : {
+        type: DataTypes.INTEGER
+        
+      }                                                                         
   },
   {
     timestamps: true,
