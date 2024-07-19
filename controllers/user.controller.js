@@ -1,14 +1,78 @@
 import {
+  checkPassword,
   hashPassword,
   isValidPassword,
+  signToken,
 } from '../middlewares/auth.middleware.js';
 import User from '../models/user.model.js';
 
+//Login User
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({
+      where: {
+        userEmail: email,
+        userStatus: 1,
+      },
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: 'User Doesnot Exists!!! Please Register' });
+    }
+
+    if (!user.userEmail) {
+      return res
+        .status(404)
+        .json({ message: 'Username or Password is Inavalid' });
+    }
+
+    const isMathing = await checkPassword(password, user.userPassword);
+    if (!isMathing) {
+      return res
+        .status(404)
+        .json({ message: 'Username or Password is Inavalid' });
+    }
+
+    const token = await signToken(user.userId, user.userRole);
+
+    return res
+      .cookie('access_token', token, {
+        httpOnly: true,
+        maxAge: 36000,
+      })
+      .status(200)
+      .json({
+        userAccess: user.userRole,
+        message: 'User Logged In Successfully',
+      });
+  } catch (error) {
+    return res.status(500).json({ message: `Server Error:${error.message}` });
+  }
+};
+
 //Registering User
 const registerUser = async (req, res) => {
-  const { email, role, employeeId } = req.body;
+  const { email, role, password, confirmPassword, employeeId } = req.params;
 
   try {
+    const validPassword = await isValidPassword(confirmPassword);
+
+    if (!validPassword) {
+      return res.status(404).json({
+        message: 'Password is not meeting requirements',
+      });
+    }
+    if (confirmPassword != password) {
+      return res.status(404).json({
+        message: 'Passwords Do Not Match!!',
+      });
+    }
+
+    const hashedPassword = await hashPassword(confirmPassword);
+
     if (!email.endsWith('@invenger.com')) {
       return res.status(404).json({
         message: 'Usage of Work Email is preffered',
@@ -27,10 +91,9 @@ const registerUser = async (req, res) => {
       });
     }
 
-    //const hashedPassword = await hashPassword(confirmPassword);
-
     const newUser = await User.create({
       userEmail: email,
+      userPassword: hashedPassword,
       userRole: role,
       userEmployeeId: employeeId,
     });
@@ -44,6 +107,29 @@ const registerUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: `Internal Server Error` });
     throw error;
+  }
+};
+
+//Add User With Employee Model
+const addUserWithEmployeeId = async (req, res) => {
+  const employeeId = req.params;
+  try {
+    const employeeData = await EmployeeDetails.findOne({
+      where: {
+        employeeId: employeeId,
+      },
+    });
+
+    const newUser = await User.create({
+      userEmail: employeeData.workEmail,
+      userEmployeeId: employeeData.employeeId,
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: 'User Created' });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 
@@ -93,7 +179,6 @@ const deleteUserByEmployeeId = async (req, res) => {
       });
     }
 
-    // Update the user's status
     await User.update(
       { userStatus: 0 },
       {
@@ -152,9 +237,26 @@ const createPassword = async (req, res) => {
   }
 };
 
+//Logout
+const logoutUser = async (req, res) => {
+  try {
+    res.cookie('access_token', '', {
+      httpOnly: true,
+      expires: new Date(0),
+    });
+
+    return res.status(200).json({ message: 'Logout successful' });
+  } catch (error) {
+    return res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
 export {
   registerUser,
   getUserByEmployeeId,
   deleteUserByEmployeeId,
   createPassword,
+  addUserWithEmployeeId,
+  loginUser,
+  logoutUser,
 };
