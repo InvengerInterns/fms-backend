@@ -8,6 +8,7 @@ import {
   logoutUser,
   sendOtp,
   verifyOtp,
+  getAllUsers,
 } from '../../controllers/user.controller.js';
 
 const router = express.Router();
@@ -20,6 +21,8 @@ router.put('/password-update', createPassword);
 router.post('/login-user', loginUser);
 //Get User Route
 router.get('/get-user/:employeeId', getUserByEmployeeId);
+//Get All Users
+router.get('/get-users', getAllUsers);
 //Delete User Route
 router.put('/delete-user/:employeeId', deleteUserByEmployeeId);
 //Logout User
