@@ -165,6 +165,32 @@ const getUserByEmployeeId = async (req, res) => {
   }
 };
 
+//Get All User with Status1
+const getAllUsers = async (req, res) => {
+  try {
+    // Fetch all users with specific attributes
+    const users = await User.findAll({
+      attributes: ['userEmail', 'userStatus', 'userRole'],
+    });
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        message: 'No users found',
+      });
+    }
+    return res.status(200).json({
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return res.status(500).json({
+      message: 'Internal Server Error',
+    });
+  }
+};
+
 // Function to delete user by employee ID
 const deleteUserByEmployeeId = async (req, res) => {
   const { employeeId } = req.params; // Assuming employeeId is passed as a URL parameter
@@ -297,6 +323,7 @@ const logoutUser = async (req, res) => {
 export {
   registerUser,
   getUserByEmployeeId,
+  getAllUsers,
   deleteUserByEmployeeId,
   createPassword,
   addUserWithEmployeeId,
