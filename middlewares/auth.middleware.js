@@ -20,7 +20,6 @@ const protect = async (req, res, next) => {
   try {
     const rolesToCheck = ['user'];
 
-    console.log(rolesToCheck);
     let token;
 
     if (req.cookies.access_token) token = req.cookies.access_token;
@@ -40,7 +39,6 @@ const protect = async (req, res, next) => {
         attributes: ['userId', 'userEmail', 'userRole', 'userStatus'],
       });
     } else {
-      console.log(decoded.role);
       currentUser = await User.findOne({
         where: {
           userId: decoded.id,
@@ -49,8 +47,6 @@ const protect = async (req, res, next) => {
         attributes: ['userId', 'userEmail', 'userRole', 'userStatus'],
       });
     }
-
-    console.log(currentUser);
 
     if (!currentUser) {
       return res
@@ -129,7 +125,6 @@ const prepareOtp = async () => {
 const allowedTo =
   (...roles) =>
   (req, res, next) => {
-    console.log(req.user.userRole);
     if (!roles.includes(req.user.userRole)) {
       return res
         .status(401)
