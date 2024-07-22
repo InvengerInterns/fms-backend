@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
+import User from '../models/user.model.js';
 
 dotenv.config();
 
@@ -14,20 +15,43 @@ const signToken = async (id, role) => {
 };
 
 //JWT Verifying Token
-const verifyToken = (req, res, next) => {
-  const token = req.cookies.access_token;
+const protect = async (req, res, next) => {
+  const rolesToCheck = Object.values('admin');
+  let token;
 
-  if (!token) return res.status(401).json({ message: 'Unauthorized User' });
+  if (req.cookies.access_token) token = req.cookies.access_token;
 
-  jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
-    if (error)
-      return res
-        .status(403)
-        .json({ message: `Forbidden User ${error.message}` });
+  if (!token) {
+    return res.status(404).json({ message: 'User Not LoggedIn' });
+  }
 
-    req.user = user;
-    next();
-  });
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  const currentUser = null;
+
+  if (decoded.role === 'admin') {
+    currentUser = await User.findOne({
+      where: {
+        userId: decoded.id,
+      },
+    });
+  } else {
+    currentUser = await User.findOne({
+      where: {
+        userId: decoded.id,
+        userRole: rolesToCheck,
+      },
+    });
+  }
+
+  if (!currentUser) {
+    return res
+      .status(400)
+      .json({ message: 'User Session Expired or No loner exists' });
+  }
+
+  req.user = currentUser;
+
+  next();
 };
 
 //Hashing Password
@@ -94,7 +118,7 @@ export {
   hashPassword,
   isValidPassword,
   signToken,
-  verifyToken,
   checkPassword,
   prepareOtp,
+  protect,
 };

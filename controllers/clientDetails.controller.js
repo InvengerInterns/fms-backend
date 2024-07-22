@@ -7,16 +7,13 @@ const createclientDetails = async (req, res) => {
     const { businessId } = req.body;
     const clientDetails = await ClientDetails.create({
       clientName: clientName,
-      clientDetailsStatus:clientDetailsStatus,
-      businessId:businessId,
+      clientDetailsStatus: clientDetailsStatus,
+      businessId: businessId,
     });
     await clientDetails.save();
-    res
-      .status(201)
-      .json({ message: 'Created Client: ', data:clientDetails });
+    res.status(201).json({ message: 'Created Client: ', data: clientDetails });
 
     res.status(201).json({ message: 'Created Client: ', data: clientDetails });
-    
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -40,4 +37,4 @@ const updateclientDetails = async (req, res) => {
   }
 };
 
-export { createclientDetails , updateclientDetails };
+export { createclientDetails, updateclientDetails };
