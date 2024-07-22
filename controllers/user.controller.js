@@ -60,7 +60,7 @@ const loginUser = async (req, res) => {
 
 //Registering User
 const registerUser = async (req, res) => {
-  const { email, role, password, confirmPassword, employeeId } = req.params;
+  const { email, role, password, confirmPassword, employeeId } = req.body;
 
   try {
     const validPassword = await isValidPassword(confirmPassword);
@@ -311,7 +311,7 @@ const verifyOtp = async (req, res) => {
 //Get current user
 const getCurrentUser = async (req, res) => {
   try {
-    const rolesToCheck = Object.values('user');
+    const rolesToCheck = ['user'];
     let currentUser;
 
     let token;

@@ -18,7 +18,9 @@ const signToken = async (id, role) => {
 //JWT Verifying Token
 const protect = async (req, res, next) => {
   try {
-    const rolesToCheck = Object.values('user');
+    const rolesToCheck = ['user'];
+
+    console.log(rolesToCheck);
     let token;
 
     if (req.cookies.access_token) token = req.cookies.access_token;
@@ -35,15 +37,20 @@ const protect = async (req, res, next) => {
         where: {
           userId: decoded.id,
         },
+        attributes:['userId','userEmail','userRole','userStatus']
       });
     } else {
+      console.log(decoded.role)
       currentUser = await User.findOne({
         where: {
           userId: decoded.id,
           userRole: rolesToCheck,
         },
+        attributes:['userId','userEmail','userRole','userStatus']
       });
     }
+
+    console.log(currentUser);
 
     if (!currentUser) {
       return res
@@ -55,7 +62,7 @@ const protect = async (req, res, next) => {
 
     next();
   } catch (error) {
-    return res.status(500).json({message:`Error Occured: ${error.message}`})
+    return res.status(500).json({ message: `Error Occured: ${error.message}` });
   }
 };
 
@@ -119,6 +126,19 @@ const prepareOtp = async () => {
   }
 };
 
+const allowedTo =
+  (...roles) =>
+  (req, res, next) => {
+    console.log(req.user.userRole);
+    if (!roles.includes(req.user.userRole)) {
+      return res
+        .status(401)
+        .json({ message: 'This User is forbidden to use these services' });
+    }
+
+    next();
+  };
+
 export {
   hashPassword,
   isValidPassword,
@@ -126,4 +146,5 @@ export {
   checkPassword,
   prepareOtp,
   protect,
+  allowedTo,
 };
