@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { promisify } from 'util';
 import crypto from 'crypto';
 import User from '../models/user.model.js';
 
@@ -16,7 +17,7 @@ const signToken = async (id, role) => {
 
 //JWT Verifying Token
 const protect = async (req, res, next) => {
-  const rolesToCheck = Object.values('admin');
+  const rolesToCheck = Object.values('user');
   let token;
 
   if (req.cookies.access_token) token = req.cookies.access_token;
@@ -26,7 +27,7 @@ const protect = async (req, res, next) => {
   }
 
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  const currentUser = null;
+  let currentUser = null;
 
   if (decoded.role === 'admin') {
     currentUser = await User.findOne({
