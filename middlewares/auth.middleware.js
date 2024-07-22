@@ -37,16 +37,16 @@ const protect = async (req, res, next) => {
         where: {
           userId: decoded.id,
         },
-        attributes:['userId','userEmail','userRole','userStatus']
+        attributes: ['userId', 'userEmail', 'userRole', 'userStatus'],
       });
     } else {
-      console.log(decoded.role)
+      console.log(decoded.role);
       currentUser = await User.findOne({
         where: {
           userId: decoded.id,
           userRole: rolesToCheck,
         },
-        attributes:['userId','userEmail','userRole','userStatus']
+        attributes: ['userId', 'userEmail', 'userRole', 'userStatus'],
       });
     }
 

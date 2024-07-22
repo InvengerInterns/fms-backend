@@ -22,13 +22,23 @@ router.put('/password-update', createPassword);
 //Login User
 router.post('/login-user', loginUser);
 //Get User Route
-router.get('/get-user/:employeeId', protect, allowedTo('admin'), getUserByEmployeeId);
+router.get(
+  '/get-user/:employeeId',
+  protect,
+  allowedTo('admin'),
+  getUserByEmployeeId
+);
 //Get All Users
 router.get('/get-users', protect, allowedTo('admin'), getAllUsers);
 //Get current user
 router.get('/get-me', protect, getCurrentUser);
 //Delete User by employeeId
-router.put('/delete-user/:employeeId', protect,  allowedTo('admin'), deleteUserByEmployeeId);
+router.put(
+  '/delete-user/:employeeId',
+  protect,
+  allowedTo('admin'),
+  deleteUserByEmployeeId
+);
 //Logout User
 router.post('/logout-user', protect, logoutUser);
 //Send OTP via Mail
