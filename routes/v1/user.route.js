@@ -8,7 +8,9 @@ import {
   logoutUser,
   sendOtp,
   verifyOtp,
+  getCurrentUser,
 } from '../../controllers/user.controller.js';
+import { protect } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -22,6 +24,8 @@ router.post('/login-user', loginUser);
 router.get('/get-user/:employeeId', getUserByEmployeeId);
 //Delete User Route
 router.put('/delete-user/:employeeId', deleteUserByEmployeeId);
+//Get current user
+router.get('/get-me', protect, getCurrentUser);
 //Logout User
 router.post('/logout-user', logoutUser);
 //Send OTP via Mail
