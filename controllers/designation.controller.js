@@ -16,23 +16,22 @@ const createDesignation = async (req, res) => {
 };
 
 //update designation details
-const updateDesignation = async(req,res) => {
-    try {
-       const { designationId } = req.params;
-       const {designationName} = req.body;
-       const designationUpdate = await Designation.findByPk(designationId);
-       if(designationUpdate) {
-        designationUpdate.designationName = designationName;
-        await designationUpdate.save();
-        res.json({ message: 'updated successfully', data: designationUpdate });
+const updateDesignation = async (req, res) => {
+  try {
+    const { designationId } = req.params;
+    const { designationName } = req.body;
+    const designationUpdate = await Designation.findByPk(designationId);
+    if (designationUpdate) {
+      designationUpdate.designationName = designationName;
+      await designationUpdate.save();
+      res.json({ message: 'updated successfully', data: designationUpdate });
     } else {
       res.status(404).json({ message: 'Designation-Details not found' });
     }
-        
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-}
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
 //Get all designation Details
 const getalldesignationDetails = async(req,res) => {

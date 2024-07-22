@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { promisify } from 'util';
 import crypto from 'crypto';
+import User from '../models/user.model.js';
 
 dotenv.config();
 
@@ -14,20 +16,54 @@ const signToken = async (id, role) => {
 };
 
 //JWT Verifying Token
-const verifyToken = (req, res, next) => {
-  const token = req.cookies.access_token;
+const protect = async (req, res, next) => {
+  try {
+    const rolesToCheck = ['user'];
 
-  if (!token) return res.status(401).json({ message: 'Unauthorized User' });
+    console.log(rolesToCheck);
+    let token;
 
-  jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
-    if (error)
+    if (req.cookies.access_token) token = req.cookies.access_token;
+
+    if (!token) {
+      return res.status(404).json({ message: 'User Not LoggedIn' });
+    }
+
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    let currentUser = null;
+
+    if (decoded.role === 'admin') {
+      currentUser = await User.findOne({
+        where: {
+          userId: decoded.id,
+        },
+        attributes:['userId','userEmail','userRole','userStatus']
+      });
+    } else {
+      console.log(decoded.role)
+      currentUser = await User.findOne({
+        where: {
+          userId: decoded.id,
+          userRole: rolesToCheck,
+        },
+        attributes:['userId','userEmail','userRole','userStatus']
+      });
+    }
+
+    console.log(currentUser);
+
+    if (!currentUser) {
       return res
-        .status(403)
-        .json({ message: `Forbidden User ${error.message}` });
+        .status(400)
+        .json({ message: 'User Session Expired or No loner exists' });
+    }
 
-    req.user = user;
+    req.user = currentUser;
+
     next();
-  });
+  } catch (error) {
+    return res.status(500).json({ message: `Error Occured: ${error.message}` });
+  }
 };
 
 //Hashing Password
@@ -90,11 +126,25 @@ const prepareOtp = async () => {
   }
 };
 
+const allowedTo =
+  (...roles) =>
+  (req, res, next) => {
+    console.log(req.user.userRole);
+    if (!roles.includes(req.user.userRole)) {
+      return res
+        .status(401)
+        .json({ message: 'This User is forbidden to use these services' });
+    }
+
+    next();
+  };
+
 export {
   hashPassword,
   isValidPassword,
   signToken,
-  verifyToken,
   checkPassword,
   prepareOtp,
+  protect,
+  allowedTo,
 };

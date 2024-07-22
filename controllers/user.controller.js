@@ -6,6 +6,8 @@ import {
   signToken,
 } from '../middlewares/auth.middleware.js';
 import User from '../models/user.model.js';
+import { promisify } from 'util';
+import jwt from 'jsonwebtoken';
 
 const userOTPMap = new Map();
 
@@ -44,7 +46,7 @@ const loginUser = async (req, res) => {
     return res
       .cookie('access_token', token, {
         httpOnly: true,
-        maxAge: 36000,
+        maxAge: 3600000,
       })
       .status(200)
       .json({
@@ -58,7 +60,7 @@ const loginUser = async (req, res) => {
 
 //Registering User
 const registerUser = async (req, res) => {
-  const { email, role, password, confirmPassword, employeeId } = req.params;
+  const { email, role, password, confirmPassword, employeeId } = req.body;
 
   try {
     const validPassword = await isValidPassword(confirmPassword);
@@ -162,6 +164,32 @@ const getUserByEmployeeId = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching user:', error);
+  }
+};
+
+//Get All User with Status1
+const getAllUsers = async (req, res) => {
+  try {
+    // Fetch all users with specific attributes
+    const users = await User.findAll({
+      attributes: ['userEmail', 'userStatus', 'userRole'],
+    });
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        message: 'No users found',
+      });
+    }
+    return res.status(200).json({
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return res.status(500).json({
+      message: 'Internal Server Error',
+    });
   }
 };
 
@@ -280,6 +308,53 @@ const verifyOtp = async (req, res) => {
   }
 };
 
+//Get current user
+const getCurrentUser = async (req, res) => {
+  try {
+    const rolesToCheck = ['user'];
+    let currentUser;
+
+    let token;
+
+    if (req.cookies.access_token) token = req.cookies.access_token;
+
+    if (!token) {
+      return res.status(404).json({ message: 'User Not LoggedIn' });
+    }
+
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+    if (decoded.role === 'admin') {
+      currentUser = await User.findOne({
+        where: {
+          userId: decoded.id,
+        },
+        attributes: ['userEmail', 'userRole', 'userStatus'],
+      });
+    } else {
+      currentUser = await User.findOne({
+        where: {
+          userId: decoded.id,
+          userRole: rolesToCheck,
+        },
+        attributes: ['userEmail', 'userRole', 'userStatus'],
+      });
+    }
+
+    if (currentUser) {
+      res.status(200).json({
+        currentUser,
+      });
+    } else {
+      res.status(404).json({ message: 'User not found.' });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: 'Error fetching user.', error: error.message });
+  }
+};
+
 //Logout
 const logoutUser = async (req, res) => {
   try {
@@ -297,6 +372,7 @@ const logoutUser = async (req, res) => {
 export {
   registerUser,
   getUserByEmployeeId,
+  getAllUsers,
   deleteUserByEmployeeId,
   createPassword,
   addUserWithEmployeeId,
@@ -304,4 +380,5 @@ export {
   logoutUser,
   sendOtp,
   verifyOtp,
+  getCurrentUser,
 };

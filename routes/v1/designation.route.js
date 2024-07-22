@@ -12,5 +12,4 @@ router.get('/getall-designation-details',getalldesignationDetails);
 //display individual client details
 router.get('/get-designation-details/:designationId',getdesignationDetails);
 
-
 export default router;

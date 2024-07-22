@@ -15,7 +15,7 @@ const Designation = sequelize.define(
     },
     designationStatus: {
       type: DataTypes.INTEGER,
-      defaultValue:1
+      defaultValue: 1,
     },
   },
   {
