@@ -6,6 +6,8 @@ import {
   signToken,
 } from '../middlewares/auth.middleware.js';
 import User from '../models/user.model.js';
+import { promisify } from 'util';
+import jwt from 'jsonwebtoken';
 
 const userOTPMap = new Map();
 
@@ -44,7 +46,7 @@ const loginUser = async (req, res) => {
     return res
       .cookie('access_token', token, {
         httpOnly: true,
-        maxAge: 36000,
+        maxAge: 3600000,
       })
       .status(200)
       .json({
@@ -307,10 +309,20 @@ const verifyOtp = async (req, res) => {
 };
 
 //Get current user
-
-const getCurrentUser = async (req, res, decoded, rolesToCheck) => {
+const getCurrentUser = async (req, res) => {
   try {
+    const rolesToCheck = Object.values('user');
     let currentUser;
+
+    let token;
+
+    if (req.cookies.access_token) token = req.cookies.access_token;
+
+    if (!token) {
+      return res.status(404).json({ message: 'User Not LoggedIn' });
+    }
+
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
     if (decoded.role === 'admin') {
       currentUser = await User.findOne({
@@ -331,9 +343,7 @@ const getCurrentUser = async (req, res, decoded, rolesToCheck) => {
 
     if (currentUser) {
       res.status(200).json({
-        userEmail: currentUser.userEmail,
-        userRole: currentUser.userRole,
-        userStatus: currentUser.userStatus,
+        currentUser,
       });
     } else {
       res.status(404).json({ message: 'User not found.' });
