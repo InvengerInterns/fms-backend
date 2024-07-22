@@ -306,6 +306,45 @@ const verifyOtp = async (req, res) => {
   }
 };
 
+//Get current user
+
+const getCurrentUser = async (req, res, decoded, rolesToCheck) => {
+  try {
+    let currentUser;
+
+    if (decoded.role === 'admin') {
+      currentUser = await User.findOne({
+        where: {
+          userId: decoded.id,
+        },
+        attributes: ['userEmail', 'userRole', 'userStatus'],
+      });
+    } else {
+      currentUser = await User.findOne({
+        where: {
+          userId: decoded.id,
+          userRole: rolesToCheck,
+        },
+        attributes: ['userEmail', 'userRole', 'userStatus'],
+      });
+    }
+
+    if (currentUser) {
+      res.status(200).json({
+        userEmail: currentUser.userEmail,
+        userRole: currentUser.userRole,
+        userStatus: currentUser.userStatus,
+      });
+    } else {
+      res.status(404).json({ message: 'User not found.' });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: 'Error fetching user.', error: error.message });
+  }
+};
+
 //Logout
 const logoutUser = async (req, res) => {
   try {
@@ -331,4 +370,5 @@ export {
   logoutUser,
   sendOtp,
   verifyOtp,
+  getCurrentUser,
 };
