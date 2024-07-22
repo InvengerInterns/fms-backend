@@ -9,7 +9,7 @@ import {
   sendOtp,
   verifyOtp,
   getCurrentUser,
-   getAllUsers,
+  getAllUsers,
 } from '../../controllers/user.controller.js';
 import { protect } from '../../middlewares/auth.middleware.js';
 
@@ -22,13 +22,13 @@ router.put('/password-update', createPassword);
 //Login User
 router.post('/login-user', loginUser);
 //Get User Route
-router.get('/get-user/:employeeId',protect,getUserByEmployeeId);
+router.get('/get-user/:employeeId', protect, getUserByEmployeeId);
 //Get All Users
 router.get('/get-users', getAllUsers);
 //Get current user
 router.get('/get-me', protect, getCurrentUser);
 //Delete User by employeeId
-router.put('/delete-user/:employeeId',protect,deleteUserByEmployeeId);
+router.put('/delete-user/:employeeId', protect, deleteUserByEmployeeId);
 //Logout User
 router.post('/logout-user', protect, logoutUser);
 //Send OTP via Mail

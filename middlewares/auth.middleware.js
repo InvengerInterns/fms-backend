@@ -17,42 +17,46 @@ const signToken = async (id, role) => {
 
 //JWT Verifying Token
 const protect = async (req, res, next) => {
-  const rolesToCheck = Object.values('user');
-  let token;
+  try {
+    const rolesToCheck = Object.values('user');
+    let token;
 
-  if (req.cookies.access_token) token = req.cookies.access_token;
+    if (req.cookies.access_token) token = req.cookies.access_token;
 
-  if (!token) {
-    return res.status(404).json({ message: 'User Not LoggedIn' });
+    if (!token) {
+      return res.status(404).json({ message: 'User Not LoggedIn' });
+    }
+
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    let currentUser = null;
+
+    if (decoded.role === 'admin') {
+      currentUser = await User.findOne({
+        where: {
+          userId: decoded.id,
+        },
+      });
+    } else {
+      currentUser = await User.findOne({
+        where: {
+          userId: decoded.id,
+          userRole: rolesToCheck,
+        },
+      });
+    }
+
+    if (!currentUser) {
+      return res
+        .status(400)
+        .json({ message: 'User Session Expired or No loner exists' });
+    }
+
+    req.user = currentUser;
+
+    next();
+  } catch (error) {
+    return res.status(500).json({message:`Error Occured: ${error.message}`})
   }
-
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  let currentUser = null;
-
-  if (decoded.role === 'admin') {
-    currentUser = await User.findOne({
-      where: {
-        userId: decoded.id,
-      },
-    });
-  } else {
-    currentUser = await User.findOne({
-      where: {
-        userId: decoded.id,
-        userRole: rolesToCheck,
-      },
-    });
-  }
-
-  if (!currentUser) {
-    return res
-      .status(400)
-      .json({ message: 'User Session Expired or No loner exists' });
-  }
-
-  req.user = currentUser;
-
-  next();
 };
 
 //Hashing Password
