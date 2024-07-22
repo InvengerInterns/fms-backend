@@ -45,28 +45,33 @@ const getallclientDetails = async (req, res) => {
     });
     res.json(clientDisplayall);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching clientDetails units', error });
+    res
+      .status(500)
+      .json({ message: 'Error fetching clientDetails units', error });
   }
 };
 
 //Display Individual client units
-const getclientDetails = async (req,res) => {
+const getclientDetails = async (req, res) => {
   try {
     const { clientId } = req.params;
     const clientDisplay = await ClientDetails.findOne({
-      where: {clientId:clientId}
+      where: { clientId: clientId },
     });
-    if(!clientDisplay){
-      return res.status(404).json({ message: 'client not found'});
+    if (!clientDisplay) {
+      return res.status(404).json({ message: 'client not found' });
     }
     res.status(200).json(clientDisplay);
-    
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching clientDetails units', error });
+    res
+      .status(500)
+      .json({ message: 'Error fetching clientDetails units', error });
   }
 };
 
-export { createclientDetails , updateclientDetails , getallclientDetails ,
-  getclientDetails
-  };
-
+export {
+  createclientDetails,
+  updateclientDetails,
+  getallclientDetails,
+  getclientDetails,
+};

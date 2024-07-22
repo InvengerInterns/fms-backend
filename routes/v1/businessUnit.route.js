@@ -5,16 +5,32 @@ import {
   deleteBusinessUnit,
   getBusinessUnits,
 } from '../../controllers/businessUnit.controller.js';
+import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 //Register business Route
-router.post('/add-business-unit', createBusinessUnit);
+router.post(
+  '/add-business-unit',
+  protect,
+  allowedTo('admin'),
+  createBusinessUnit
+);
 //update  business unit Route
-router.put('/update-business-unit/:id', updateBusinessUnit);
+router.put(
+  '/update-business-unit/:id',
+  protect,
+  allowedTo('admin'),
+  updateBusinessUnit
+);
 //delete business unit Route
-router.delete('/delete-business-unit/:id', deleteBusinessUnit);
+router.delete(
+  '/delete-business-unit/:id',
+  protect,
+  allowedTo('admin'),
+  deleteBusinessUnit
+);
 //get business unit Route
-router.get('/get-business-unit', getBusinessUnits);
+router.get('/get-business-unit', protect, allowedTo('admin'), getBusinessUnits);
 
 export default router;
