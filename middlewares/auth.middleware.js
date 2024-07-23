@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import { promisify } from 'util';
 import crypto from 'crypto';
 import User from '../models/user.model.js';
+import path from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -122,6 +124,7 @@ const prepareOtp = async () => {
   }
 };
 
+//Role Based Access Middleware
 const allowedTo =
   (...roles) =>
   (req, res, next) => {
@@ -134,6 +137,14 @@ const allowedTo =
     next();
   };
 
+//Email Body Matching
+const getHtmlContent = async(otp) => {
+  const filePath = path.join(__dirname,'otp_body.html');
+  let htmlContent = fs.readFileSync(filePath,'utf-8');
+  htmlContent = htmlContent.replace('{{OTP}}',otp);
+  return htmlContent;
+}
+
 export {
   hashPassword,
   isValidPassword,
@@ -142,4 +153,5 @@ export {
   prepareOtp,
   protect,
   allowedTo,
+  getHtmlContent
 };
