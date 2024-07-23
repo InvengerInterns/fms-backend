@@ -4,10 +4,15 @@ import {
   hashPassword,
   isValidPassword,
   signToken,
+  getHtmlContent,
 } from '../middlewares/auth.middleware.js';
 import User from '../models/user.model.js';
 import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
+import sendMail from '../utils/emailSend.util.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const userOTPMap = new Map();
 
@@ -274,7 +279,9 @@ const sendOtp = async (req, res) => {
   try {
     const otp = await prepareOtp();
     userOTPMap.set(email, otp);
-    console.log(userOTPMap);
+    const htmlBody = await getHtmlContent(otp);
+    const subject = 'OTP-HR ADMIN';
+    await sendMail(email, subject, htmlBody);
     res.status(200).json({ message: 'OTP sent to your email.' });
   } catch (error) {
     res.status(400).json({ message: 'OTP sending failed.' });
