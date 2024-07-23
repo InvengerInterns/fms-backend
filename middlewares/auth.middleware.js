@@ -5,9 +5,13 @@ import { promisify } from 'util';
 import crypto from 'crypto';
 import User from '../models/user.model.js';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 //JWT Signing
 const signToken = async (id, role) => {
@@ -115,7 +119,6 @@ const generateOtp = async () => {
 //Prepare OTP [add mail body here]
 const prepareOtp = async () => {
   const otp = await generateOtp();
-  console.log(otp);
 
   try {
     return otp;
@@ -138,12 +141,22 @@ const allowedTo =
   };
 
 //Email Body Matching
-const getHtmlContent = async(otp) => {
-  const filePath = path.join(__dirname,'otp_body.html');
-  let htmlContent = fs.readFileSync(filePath,'utf-8');
-  htmlContent = htmlContent.replace('{{OTP}}',otp);
-  return htmlContent;
-}
+const getHtmlContent = async (otp) => {
+  try {
+    const filePath = path.join(__dirname, '../public/otp_body.html');
+    let htmlContent = await fs.readFile(filePath, 'utf-8');
+
+    if (typeof htmlContent !== 'string') {
+      throw new Error('File content is not a string');
+    }
+
+    htmlContent = htmlContent.replace('{{OTP}}', otp);
+    return htmlContent;
+  } catch (error) {
+    console.error('Error reading or processing file:', error);
+    throw error; // Re-throw the error to be handled by the caller
+  }
+};
 
 export {
   hashPassword,
@@ -153,5 +166,5 @@ export {
   prepareOtp,
   protect,
   allowedTo,
-  getHtmlContent
+  getHtmlContent,
 };
