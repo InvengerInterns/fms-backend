@@ -280,7 +280,7 @@ const sendOtp = async (req, res) => {
     const otp = await prepareOtp();
     userOTPMap.set(email, otp);
     const htmlBody = await getHtmlContent(otp);
-    const subject = 'OTP-HR ADMIN';
+    const subject = 'OTP- Verification HR-INVENGER';
     await sendMail(email, subject, htmlBody);
     res.status(200).json({ message: 'OTP sent to your email.' });
   } catch (error) {
