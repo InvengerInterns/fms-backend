@@ -24,11 +24,12 @@
         gap: 10rem;
         height: 90%;
         width: 100%;
-        background-color: blue;
+        background-color: white;
+        border: solid 2px black;
       }
 
       .header {
-        background-color: blue;
+        background-color: white;
         color: white;
         display: flex;
         align-items: center;
@@ -40,13 +41,13 @@
       .center-container {
         background-color: white;
         border-radius: 12px;
-        height: 45%;
-        width: 25%;
+        height: 60%;
+        width: 45%;
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-direction: column;
-        font-size: x-large;
+        font-size: medium;
       }
 
       img {
@@ -62,9 +63,7 @@
         padding-left: 10px;
       }
 
-      .otp {
-        text-align: center;
-      }
+      
     </style>
   </head>
   <body>
@@ -75,9 +74,8 @@
     </div>
     <div class="main-container">
       <div class="center-container">
-        <p>Your one time password</p>
+        <p style="letter-spacing: 4px;">OTP</p>
         <h2 style="color: gray; letter-spacing: 5px">{{OTP}}</h2>
-        <p style="color: red" ;>Do not share this with anyone</p>
       </div>
     </div>
   </body>
