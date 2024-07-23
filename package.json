@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.30.1",
     "mysql2": "^3.10.3",
+    "nodemailer": "^6.9.14",
     "sequelize": "^6.37.3"
   },
   "devDependencies": {
