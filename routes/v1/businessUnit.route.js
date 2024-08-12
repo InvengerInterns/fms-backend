@@ -31,6 +31,6 @@ router.delete(
   deleteBusinessUnit
 );
 //get business unit Route
-router.get('/get-business-unit', protect, allowedTo('admin'), getBusinessUnits);
+router.get('/get-business-unit', protect, getBusinessUnits);
 
 export default router;
