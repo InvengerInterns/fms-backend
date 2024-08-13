@@ -19,23 +19,18 @@ const signToken = async (id, role) => {
 const protect = async (req, res, next) => {
   try {
     const rolesToCheck = ['user'];
-
-    let token;
-
-    if (req.cookies.access_token) token = req.cookies.access_token;
+    let token = req.cookies.access_token;
 
     if (!token) {
-      return res.status(404).json({ message: 'User Not LoggedIn' });
+      return res.status(401).json({ message: 'User Not Logged In' });
     }
 
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
     let currentUser = null;
 
     if (decoded.role === 'admin') {
       currentUser = await User.findOne({
-        where: {
-          userId: decoded.id,
-        },
+        where: { userId: decoded.id },
         attributes: ['userId', 'userEmail', 'userRole', 'userStatus'],
       });
     } else {
@@ -49,16 +44,19 @@ const protect = async (req, res, next) => {
     }
 
     if (!currentUser) {
-      return res
-        .status(400)
-        .json({ message: 'User Session Expired or No loner exists' });
+      return res.status(401).json({ message: 'User Session Expired or No Longer Exists' });
     }
 
     req.user = currentUser;
-
     next();
   } catch (error) {
-    return res.status(500).json({ message: `Error Occured: ${error.message}` });
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Invalid Token' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token Expired' });
+    }
+    return res.status(500).json({ message: `Error Occurred: ${error.message}` });
   }
 };
 
@@ -125,6 +123,7 @@ const prepareOtp = async () => {
 const allowedTo =
   (...roles) =>
   (req, res, next) => {
+    console.log(req.user);
     if (!roles.includes(req.user.userRole)) {
       return res
         .status(401)
