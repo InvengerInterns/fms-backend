@@ -42,8 +42,8 @@ router.put(
 //Logout User
 router.post('/logout-user', protect, logoutUser);
 //Send OTP via Mail
-router.post('/send-otp', protect, sendOtp);
+router.post('/send-otp', sendOtp);
 //Verify OTP
-router.post('/verify-otp/:email', protect, verifyOtp);
+router.post('/verify-otp/:email', verifyOtp);
 
 export default router;

@@ -11,6 +11,7 @@ import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
 import sendMail from '../utils/emailSend.util.js';
 import dotenv from 'dotenv';
+import { where } from 'sequelize';
 
 dotenv.config();
 
@@ -279,6 +280,17 @@ const sendOtp = async (req, res) => {
   const { email } = req.body;
   try {
     const otp = await prepareOtp();
+    const userEmail = await User.findOne({
+      attributes:["userEmail"],
+      where:{
+        userEmail:email
+      }
+    });
+
+    if(!userEmail){
+      return res.status(401).json({message:"You Are An Unauthorized User"})
+    }
+
     userOTPMap.set(email, otp);
     const htmlBody = await getHtmlContent(otp);
     const subject = 'OTP- Verification HR-INVENGER';
