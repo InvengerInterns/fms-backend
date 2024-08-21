@@ -8,10 +8,7 @@ import indexRoutes from './routes/index.route.js';
 import { EventEmitter } from 'events';
 import rateLimit from 'express-rate-limit';
 
-
 const app = express();
-
-
 
 // Rate limiter setup
 const limiter = rateLimit({

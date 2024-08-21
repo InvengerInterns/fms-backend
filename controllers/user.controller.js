@@ -11,7 +11,6 @@ import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
 import sendMail from '../utils/emailSend.util.js';
 import dotenv from 'dotenv';
-import { where } from 'sequelize';
 
 dotenv.config();
 
@@ -242,6 +241,17 @@ const createPassword = async (req, res) => {
   const { employeeId, password, confirmPassword } = req.body;
 
   try {
+    const userEmployeeId = await User.findOne({
+      attributes:["userEmployeeId"],
+      where: {
+        userEmployeeId:employeeId
+      }
+    });
+
+    if(!userEmployeeId){
+      return res.status(401).json({success:false,message:"Not Registered With Us"});
+    }
+
     const validPassword = await isValidPassword(confirmPassword);
 
     if (!validPassword) {
@@ -281,14 +291,14 @@ const sendOtp = async (req, res) => {
   try {
     const otp = await prepareOtp();
     const userEmail = await User.findOne({
-      attributes:["userEmail"],
-      where:{
-        userEmail:email
-      }
+      attributes: ['userEmail'],
+      where: {
+        userEmail: email,
+      },
     });
 
-    if(!userEmail){
-      return res.status(401).json({message:"You Are An Unauthorized User"})
+    if (!userEmail) {
+      return res.status(401).json({ message: 'You Are An Unauthorized User' });
     }
 
     userOTPMap.set(email, otp);
