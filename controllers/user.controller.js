@@ -262,7 +262,7 @@ const createPassword = async (req, res) => {
     if (confirmPassword != password) {
       return res.status(404).json({
         message: 'Passwords Do Not Match!!',
-      });
+      }); 
     }
 
     const hashedPassword = await hashPassword(confirmPassword);
