@@ -62,8 +62,12 @@ const Employee = sequelize.define(
       allowNull: true,
     },
     aadhar: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(12), // Limit the length to 12 characters
       allowNull: true,
+      validate: {
+        isNumeric: true, // Ensure the string only contains numbers
+        len: [12, 12],   // Ensure exactly 12 characters
+      },
     },
     pancard: {
       type: DataTypes.STRING,
