@@ -3,6 +3,7 @@ import {
   updateclientDetails,
   getallclientDetails,
   getclientDetails,
+  getClientsByBusinessId,
 } from '../../controllers/clientDetails.controller.js';
 import express from 'express';
 import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
@@ -38,17 +39,10 @@ router.get(
   getclientDetails
 );
 
-router.get('/clients/:businessId', async (req, res) => {
-  try {
-    const { businessId } = req.params;
-    const clients = await ClientDetails.findAll({
-      where: { businessId }, // Filter clients by businessId
-      attributes: ['clientName'],
-    });
-    res.status(200).json(clients);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching clients', error });
-  }
-});
+router.get('/clients/:businessId',
+  protect,
+  allowedTo('admin'),
+  getClientsByBusinessId
+);
 
 export default router;
