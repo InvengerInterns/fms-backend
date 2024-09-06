@@ -122,6 +122,5 @@ export{
   getEmployeeById,
   updateEmployeeDetails,
   updateEmployeeStatus
- 
-};
+ };
 

@@ -69,9 +69,25 @@ const getclientDetails = async (req, res) => {
   }
 };
 
+// Get Client ID and Name based on Business ID For Dropdown
+
+const getClientsByBusinessId = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const clients = await ClientDetails.findAll({
+      where: { businessId }, // Filter clients by businessId
+      attributes: ['clientId', 'clientName'],
+    });
+    res.status(200).json(clients);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching clients', error });
+  }
+};
+
 export {
   createclientDetails,
   updateclientDetails,
   getallclientDetails,
   getclientDetails,
+  getClientsByBusinessId
 };

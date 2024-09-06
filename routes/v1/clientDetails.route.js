@@ -3,6 +3,7 @@ import {
   updateclientDetails,
   getallclientDetails,
   getclientDetails,
+  getClientsByBusinessId,
 } from '../../controllers/clientDetails.controller.js';
 import express from 'express';
 import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
@@ -36,6 +37,12 @@ router.get(
   protect,
   allowedTo('admin'),
   getclientDetails
+);
+
+router.get('/clients/:businessId',
+  protect,
+  allowedTo('admin'),
+  getClientsByBusinessId
 );
 
 export default router;
