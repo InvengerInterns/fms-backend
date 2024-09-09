@@ -11,27 +11,27 @@ const Employee = sequelize.define(
     },
     firstName: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     lastName: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     phoneNumber: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     dateofBirth: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
     },
     personalEmail: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     workEmail: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     bloodGroup: {
       type: DataTypes.STRING,
@@ -43,15 +43,15 @@ const Employee = sequelize.define(
     },
     permanentAddress: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     currentAddress: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     emergencyContact: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     employeeImage: {
       type: DataTypes.STRING,
@@ -63,7 +63,7 @@ const Employee = sequelize.define(
     },
     aadhar: {
       type: DataTypes.STRING(12), // Limit the length to 12 characters
-      allowNull: true,
+      allowNull: false,
       validate: {
         isNumeric: true, // Ensure the string only contains numbers
         len: [12, 12],   // Ensure exactly 12 characters
@@ -81,16 +81,38 @@ const Employee = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+
+    joinDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    endDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    jobDescription: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    reportingManagerId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    resumelink: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+
     status: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       defaultValue: 2,
     },
   },
   {
-    timestamps: true,
+    timestamps: false,
   }
 );
 
-Employee.sync();
+Employee.sync({ alter: true });
 export default Employee;

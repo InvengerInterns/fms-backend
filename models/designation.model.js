@@ -23,5 +23,5 @@ const Designation = sequelize.define(
   }
 );
 
-Designation.sync();
+Designation.sync({ alter: true });;
 export default Designation;

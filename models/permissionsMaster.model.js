@@ -25,5 +25,5 @@ const PermissionsMaster = sequelize.define(
       }
     );
 
-    PermissionsMaster.sync();
+    PermissionsMaster.sync({ alter: true });;
     export default PermissionsMaster;

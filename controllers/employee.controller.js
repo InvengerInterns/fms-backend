@@ -27,8 +27,20 @@ const getAllEmployees = async (req, res) => {
     // Fetch all employees from the database
     const employees = await Employee.findAll();
 
+    const formattedEmployees = employees.map((employee) => ({
+      joinDate: employee.joinDate,
+      endDate: employee.endDate,
+      jobDescription: employee.jobDescription,
+      reportingManagerId: employee.reportingManagerId,
+      resumelink: employee.resumelink,
+      status: employee.status,
+    }));
+
     // Respond with the list of employees
-    res.status(200).json(employees);
+    res.status(200).json({
+      personalDetails: employees,
+      professionalDetails: formattedEmployees,
+    });
   } catch (error) {
     // Handle any errors that occur during the fetch
     res.status(500).json({ message: 'Error fetching employees', error });

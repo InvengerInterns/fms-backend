@@ -28,6 +28,6 @@ const SubDepartment = sequelize.define(
   }
 );
 
-SubDepartment.sync();
+SubDepartment.sync({ alter: true });;
 
 export default SubDepartment;
