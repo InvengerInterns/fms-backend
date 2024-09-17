@@ -27,5 +27,5 @@ const ClientDetails = sequelize.define(
   }
 );
 
-ClientDetails.sync();
+ClientDetails.sync({ alter: true });;
 export default ClientDetails;

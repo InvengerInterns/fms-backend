@@ -28,6 +28,6 @@ const Department = sequelize.define(
   }
 );
 
-Department.sync();
+Department.sync({ alter: true });;
 
 export default Department;
