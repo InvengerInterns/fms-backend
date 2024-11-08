@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 //JWT Signing
 const signToken = async (id, role) => {
   const token = await jwt.sign({ id, role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
+    expiresIn: process.env.JWT_LIFESPAN ,
   });
   return token;
 };
@@ -141,20 +141,30 @@ const allowedTo =
   };
 
 //Email Body Matching
-const getHtmlContent = async (otp) => {
+const getHtmlContent = async (type, options = {}) => {
   try {
-    const filePath = path.join(__dirname, '../public/otp_body.html');
-    let htmlContent = await fs.readFile(filePath, 'utf-8');
+    let filePath;
+    let htmlContent;
 
-    if (typeof htmlContent !== 'string') {
-      throw new Error('File content is not a string');
+    // Determine the HTML template file based on the email type
+    if (type.toLowerCase() === 'otp' && options.otp) {
+      filePath = path.join(__dirname, '../public/otp_body.html');
+      htmlContent = await fs.readFile(filePath, 'utf-8');
+      htmlContent = htmlContent.replace('{{OTP}}', options.otp);
+    } else if (type.toLowerCase() === 'new-password' && options.username && options.link) {
+      filePath = path.join(__dirname, '../public/new_password.html');
+      htmlContent = await fs.readFile(filePath, 'utf-8');
+      htmlContent = htmlContent
+        .replace('{{USERNAME}}', options.username)
+        .replace('{{PASSWORD_CREATION_LINK}}', options.link);
+    } else {
+      throw new Error('Invalid parameters or missing template variables');
     }
 
-    htmlContent = htmlContent.replace('{{OTP}}', otp);
     return htmlContent;
   } catch (error) {
     console.error('Error reading or processing file:', error);
-    throw error; // Re-throw the error to be handled by the caller
+    throw error;
   }
 };
 

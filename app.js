@@ -5,7 +5,6 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import expressSanitizer from 'express-sanitizer';
 import indexRoutes from './routes/index.route.js';
-import { EventEmitter } from 'events';
 import rateLimit from 'express-rate-limit';
 
 const app = express();

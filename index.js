@@ -1,8 +1,9 @@
 import app from './app.js';
 import dotenv from 'dotenv';
 import sequelize from './config/dbConnection.config.js';
+
 dotenv.config();
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 
 try {
   await sequelize.authenticate();

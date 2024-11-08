@@ -4,10 +4,14 @@ import sequelize from '../config/dbConnection.config.js';
 const Employee = sequelize.define(
   'employee',
   {
-    employeeId: {
+    id:{
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
+    },
+    employeeId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     firstName: {
       type: DataTypes.STRING,
@@ -38,7 +42,7 @@ const Employee = sequelize.define(
       allowNull: true,
     },
     tshirtSize: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: true,
     },
     permanentAddress: {
@@ -92,10 +96,6 @@ const Employee = sequelize.define(
     },
     jobDescription: {
       type: DataTypes.STRING,
-      allowNull: true,
-    },
-    reportingManagerId: {
-      type: DataTypes.INTEGER,
       allowNull: true,
     },
     resumelink: {

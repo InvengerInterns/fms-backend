@@ -7,6 +7,7 @@ import {
   getHtmlContent,
 } from '../middlewares/auth.middleware.js';
 import User from '../models/user.model.js';
+import Employee from '../models/Employee.model.js';
 import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
 import sendMail from '../utils/emailSend.util.js';
@@ -125,7 +126,7 @@ const registerUser = async (req, res) => {
 const addUserWithEmployeeId = async (req, res) => {
   const employeeId = req.params;
   try {
-    const employeeData = await EmployeeDetails.findOne({
+    const employeeData = await Employee.findOne({
       where: {
         employeeId: employeeId,
       },
@@ -359,7 +360,7 @@ const getCurrentUser = async (req, res) => {
         where: {
           userId: decoded.id,
         },
-        attributes: ['userEmail', 'userRole', 'userStatus'],
+        attributes: ['userEmployeeId','userEmail', 'userRole', 'userStatus',],
       });
     } else {
       currentUser = await User.findOne({
@@ -367,7 +368,7 @@ const getCurrentUser = async (req, res) => {
           userId: decoded.id,
           userRole: rolesToCheck,
         },
-        attributes: ['userEmail', 'userRole', 'userStatus'],
+        attributes: ['userEmployeeId','userEmail', 'userRole', 'userStatus'],
       });
     }
 
