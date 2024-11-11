@@ -12,6 +12,8 @@ import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
 import sendMail from '../utils/emailSend.util.js';
 import dotenv from 'dotenv';
+import PermissionsMaster from '../models/permissionsMaster.model.js';
+import { accessControls, permission_Ids } from '../constants.js';
 
 dotenv.config();
 
@@ -124,13 +126,21 @@ const registerUser = async (req, res) => {
 
 //Add User With Employee Model
 const addUserWithEmployeeId = async (req, res) => {
-  const employeeId = req.params;
+  const { employeeId } = req.params;
+  let link;
+
   try {
     const employeeData = await Employee.findOne({
       where: {
         employeeId: employeeId,
       },
     });
+
+    if (!employeeData) {
+      return res.status(404).json({
+        message: 'Employee Not Found',
+      });
+    }
 
     const newUser = await User.create({
       userEmail: employeeData.workEmail,
@@ -139,7 +149,50 @@ const addUserWithEmployeeId = async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({ message: 'User Created' });
+    const newUserData = await User.findOne({
+      order: [['userId', 'DESC']],
+    });
+
+    const permissionsWithStatus = {
+      [permission_Ids.ABOUT]: accessControls.WRITE,
+      [permission_Ids.INTERVIEWS]: accessControls.WRITE,
+      [permission_Ids.SALARY_SLIP]: accessControls.NO_ACCESS,
+      [permission_Ids.OFFER_CONFIRMATION]: accessControls.NO_ACCESS,
+      [permission_Ids.OFFER_LETTER]: accessControls.NO_ACCESS,
+      [permission_Ids.ONBOARDING]: accessControls.NO_ACCESS,
+      [permission_Ids.BACKGROUND_VERIFICATION]: accessControls.WRITE,
+      [permission_Ids.PERFORMANCE_APPRAISAL]: accessControls.NO_ACCESS,
+      [permission_Ids.CERTIFICATION]: accessControls.READ,
+      [permission_Ids.HR_SCREENING]: accessControls.READ,
+      [permission_Ids.EXIT_FORMALITIES]: accessControls.NO_ACCESS,
+      [permission_Ids.CLIENT_HISTORY]: accessControls.READ,
+    };
+
+    const newUserPermissions = await Promise.all(
+      Object.entries(permissionsWithStatus).map(
+        async ([permissionId, status]) => {
+          return await PermissionsMaster.create({
+            userId: newUserData.userId,
+            permissionId: parseInt(permissionId),
+            status: status,
+          });
+        }
+      )
+    );
+
+    //link = `http://localhost:5000/api/v1/user/password-update/${employeeData.employeeId}`;
+    link = `http://localhost:5000/api/v1/user/password-update`;
+    const htmlBody = await getHtmlContent('new-password', {
+      username: employeeData.firstName,
+      link: link,
+    });
+    const subject = 'User Password Creation FMS-TEST';
+    await sendMail(employeeData.workEmail, subject, htmlBody);
+
+    res.status(201).json({
+      message: 'User Created and Email for password creation has been Sent',
+      permissions: newUserPermissions,
+    });
   } catch (error) {
     res.status(500).json({ message: 'Internal Server Error' });
   }
@@ -243,14 +296,16 @@ const createPassword = async (req, res) => {
 
   try {
     const userEmployeeId = await User.findOne({
-      attributes:["userEmployeeId"],
+      attributes: ['userEmployeeId'],
       where: {
-        userEmployeeId:employeeId
-      }
+        userEmployeeId: employeeId,
+      },
     });
 
-    if(!userEmployeeId){
-      return res.status(401).json({success:false,message:"Not Registered With Us"});
+    if (!userEmployeeId) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'Not Registered With Us' });
     }
 
     const validPassword = await isValidPassword(confirmPassword);
@@ -263,7 +318,7 @@ const createPassword = async (req, res) => {
     if (confirmPassword != password) {
       return res.status(404).json({
         message: 'Passwords Do Not Match!!',
-      }); 
+      });
     }
 
     const hashedPassword = await hashPassword(confirmPassword);
@@ -303,8 +358,8 @@ const sendOtp = async (req, res) => {
     }
 
     userOTPMap.set(email, otp);
-    const htmlBody = await getHtmlContent(otp);
-    const subject = 'OTP- Verification HR-INVENGER';
+    const htmlBody = await getHtmlContent('otp', { otp: otp });
+    const subject = 'OTP- Verification FMS-TEST';
     await sendMail(email, subject, htmlBody);
     res.status(200).json({ message: 'OTP sent to your email.' });
   } catch (error) {
@@ -360,7 +415,7 @@ const getCurrentUser = async (req, res) => {
         where: {
           userId: decoded.id,
         },
-        attributes: ['userEmployeeId','userEmail', 'userRole', 'userStatus',],
+        attributes: ['userEmployeeId', 'userEmail', 'userRole', 'userStatus'],
       });
     } else {
       currentUser = await User.findOne({
@@ -368,7 +423,7 @@ const getCurrentUser = async (req, res) => {
           userId: decoded.id,
           userRole: rolesToCheck,
         },
-        attributes: ['userEmployeeId','userEmail', 'userRole', 'userStatus'],
+        attributes: ['userEmployeeId', 'userEmail', 'userRole', 'userStatus'],
       });
     }
 

@@ -32,6 +32,6 @@ const EmployeeDocument = sequelize.define(
   }
 );
 
-EmployeeDocument.sync({ alter: true });;
+EmployeeDocument.sync({ alter: true });
 
 export default EmployeeDocument;

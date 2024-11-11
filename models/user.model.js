@@ -17,7 +17,7 @@ const User = sequelize.define(
       type: DataTypes.STRING(64),
     },
     userRole: {
-      type: DataTypes.ENUM('admin', 'user'),
+      type: DataTypes.ENUM('super-admin', 'admin', 'user'),
       defaultValue: 'user',
     },
     userEmployeeId: {
@@ -31,6 +31,6 @@ const User = sequelize.define(
   { timeStamp: true }
 );
 
-User.sync({ alter: true });;
+User.sync({ alter: false });
 
 export default User;

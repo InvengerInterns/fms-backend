@@ -57,7 +57,4 @@ const updateDepartmentDetails = async (req, res) => {
   }
 };
 
-export {
-  createDepartment,
-  updateDepartmentDetails,
-};
+export { createDepartment, updateDepartmentDetails };

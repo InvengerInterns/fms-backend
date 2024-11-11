@@ -10,6 +10,7 @@ import {
   verifyOtp,
   getCurrentUser,
   getAllUsers,
+  addUserWithEmployeeId,
 } from '../../controllers/user.controller.js';
 import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
 
@@ -17,6 +18,13 @@ const router = express.Router();
 
 //Register Route
 router.post('/add-user', registerUser);
+//Register User Route
+router.post(
+  '/register-user/:employeeId',
+  protect,
+  allowedTo('admin', 'super-admin'),
+  addUserWithEmployeeId
+);
 //Register or Change Password
 router.put('/password-update', createPassword);
 //Login User

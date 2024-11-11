@@ -12,5 +12,17 @@ export const accessControls = {
   WRITE: 2, // Read and write access
 };
 
-// Permissions
-export const permissions = {};
+export const permission_Ids = {
+  ABOUT: 1,
+  INTERVIEWS: 2,
+  SALARY_SLIP: 3,
+  OFFER_CONFIRMATION: 4,
+  OFFER_LETTER: 5,
+  ONBOARDING: 6,
+  BACKGROUND_VERIFICATION: 7,
+  PERFORMANCE_APPRAISAL: 8,
+  CERTIFICATION: 9,
+  HR_SCREENING: 10,
+  EXIT_FORMALITIES: 11,
+  CLIENT_HISTORY: 12,
+};

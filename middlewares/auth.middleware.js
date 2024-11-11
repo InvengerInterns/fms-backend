@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 //JWT Signing
 const signToken = async (id, role) => {
   const token = await jwt.sign({ id, role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_LIFESPAN ,
+    expiresIn: process.env.JWT_LIFESPAN,
   });
   return token;
 };
@@ -151,7 +151,11 @@ const getHtmlContent = async (type, options = {}) => {
       filePath = path.join(__dirname, '../public/otp_body.html');
       htmlContent = await fs.readFile(filePath, 'utf-8');
       htmlContent = htmlContent.replace('{{OTP}}', options.otp);
-    } else if (type.toLowerCase() === 'new-password' && options.username && options.link) {
+    } else if (
+      type.toLowerCase() === 'new-password' &&
+      options.username &&
+      options.link
+    ) {
       filePath = path.join(__dirname, '../public/new_password.html');
       htmlContent = await fs.readFile(filePath, 'utf-8');
       htmlContent = htmlContent
