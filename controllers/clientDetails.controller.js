@@ -89,5 +89,5 @@ export {
   updateclientDetails,
   getallclientDetails,
   getclientDetails,
-  getClientsByBusinessId
+  getClientsByBusinessId,
 };

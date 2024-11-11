@@ -22,6 +22,6 @@ const BusinessUnit = sequelize.define(
   }
 );
 
-BusinessUnit.sync({ alter: true });;
+BusinessUnit.sync({ alter: true });
 
 export default BusinessUnit;

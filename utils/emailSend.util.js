@@ -3,7 +3,7 @@ import transporter from '../config/emailTransport.config.js';
 const sendMail = async (toEmail, emailSubject, emailBody) => {
   try {
     await transporter.sendMail({
-      from: `"FMS-TEST" <nishant.shivananda@invenger.com>`,
+      from: `"FMS-TEST" <nishanth.shivananda@invenger.com>`,
       to: toEmail,
       subject: emailSubject,
       html: emailBody,

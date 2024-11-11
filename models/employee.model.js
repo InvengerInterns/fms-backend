@@ -4,7 +4,7 @@ import sequelize from '../config/dbConnection.config.js';
 const Employee = sequelize.define(
   'employee',
   {
-    id:{
+    id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
@@ -70,7 +70,7 @@ const Employee = sequelize.define(
       allowNull: false,
       validate: {
         isNumeric: true, // Ensure the string only contains numbers
-        len: [12, 12],   // Ensure exactly 12 characters
+        len: [12, 12], // Ensure exactly 12 characters
       },
     },
     pancard: {

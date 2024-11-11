@@ -18,7 +18,9 @@ async function initializeDatabase() {
 
   try {
     // Check if the database exists, if not, create it
-    await sequelizeWithoutDb.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`;`);
+    await sequelizeWithoutDb.query(
+      `CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`;`
+    );
     console.log(`Database ${process.env.DB_NAME} ensured to exist.`);
 
     // Close the connection without database

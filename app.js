@@ -10,13 +10,13 @@ import rateLimit from 'express-rate-limit';
 const app = express();
 
 // Rate limiter setup
-const limiter = rateLimit({
-  max: parseInt(process.env.RATE_LIMIT_MAX, 10), // Convert from string to number
-  windowMs: parseInt(process.env.RATE_LIMIT_TIME, 10) * 60 * 60 * 1000, // Convert hours to milliseconds
-  message: 'Too many requests from this IP, please try again later!',
-});
+// const limiter = rateLimit({
+//   max: parseInt(process.env.RATE_LIMIT_MAX, 10), // Convert from string to number
+//   windowMs: parseInt(process.env.RATE_LIMIT_TIME, 10) * 60 * 60 * 1000, // Convert hours to milliseconds
+//   message: 'Too many requests from this IP, please try again later!',
+// });
 
-app.use(limiter);
+// app.use(limiter);
 
 //Json Body Input
 app.use(express.json());

@@ -85,7 +85,9 @@ const updateEmployeeDetails = async (req, res) => {
       await employee.update(updateData);
 
       // Respond with the updated employee data
-      res.status(200).json({ message: 'Employee details updated successfully', employee });
+      res
+        .status(200)
+        .json({ message: 'Employee details updated successfully', employee });
     } else {
       // If the employee is not found, respond with a 404 status code
       res.status(404).json({ message: 'Employee not found' });
@@ -114,7 +116,9 @@ const updateEmployeeStatus = async (req, res) => {
       await employee.save();
 
       // Respond with the updated employee data
-      res.status(200).json({ message: 'Employee status updated successfully', employee });
+      res
+        .status(200)
+        .json({ message: 'Employee status updated successfully', employee });
     } else {
       // If the employee is not found, respond with a 404 status code
       res.status(404).json({ message: 'Employee not found' });
@@ -125,14 +129,10 @@ const updateEmployeeStatus = async (req, res) => {
   }
 };
 
-
-
-
-export{
+export {
   createEmployee,
   getAllEmployees,
   getEmployeeById,
   updateEmployeeDetails,
-  updateEmployeeStatus
- };
-
+  updateEmployeeStatus,
+};

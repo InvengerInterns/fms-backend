@@ -39,7 +39,8 @@ router.get(
   getclientDetails
 );
 
-router.get('/clients/:businessId',
+router.get(
+  '/clients/:businessId',
   protect,
   allowedTo('admin'),
   getClientsByBusinessId
