@@ -14,10 +14,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 //JWT Signing
-const signToken = async (id, role) => {
-  const token = await jwt.sign({ id, role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_LIFESPAN,
-  });
+const signToken = async (id, role, permission) => {
+  const token = await jwt.sign(
+    { id, role, permission },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: process.env.JWT_LIFESPAN,
+    }
+  );
   return token;
 };
 
@@ -171,6 +175,8 @@ const getHtmlContent = async (type, options = {}) => {
     throw error;
   }
 };
+
+//Permission Based Access Middleware
 
 export {
   hashPassword,
