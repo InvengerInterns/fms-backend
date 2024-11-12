@@ -13,57 +13,77 @@ import jwt from 'jsonwebtoken';
 import sendMail from '../utils/emailSend.util.js';
 import dotenv from 'dotenv';
 import PermissionsMaster from '../models/permissionsMaster.model.js';
+import Permissions from '../models/permissions.model.js';
 import { accessControls, permission_Ids } from '../constants.js';
+import { Sequelize } from 'sequelize';
+import sequelize from '../config/dbConnection.config.js';
+import { getCustomQueryResults } from '../utils/customQuery.util.js';
 
 dotenv.config();
 
 const userOTPMap = new Map();
 
-//Login User
+// Login User
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    // Fetch user by email with active status
     const user = await User.findOne({
       where: {
         userEmail: email,
-        userStatus: 1,
+        userStatus: 1, // Ensure user is active
       },
     });
 
     if (!user) {
       return res
         .status(404)
-        .json({ message: 'User Doesnot Exists!!! Please Register' });
+        .json({ message: 'User does not exist! Please Register.' });
     }
 
-    if (!user.userEmail) {
-      return res
-        .status(404)
-        .json({ message: 'Username or Password is Inavalid' });
+    // Check if password matches
+    const isMatching = await checkPassword(password, user.userPassword);
+    if (!isMatching) {
+      return res.status(401).json({ message: 'Invalid Username or Password' });
     }
 
-    const isMathing = await checkPassword(password, user.userPassword);
-    if (!isMathing) {
-      return res
-        .status(404)
-        .json({ message: 'Username or Password is Inavalid' });
-    }
+    const tables = ['login_details','permissions_masters', 'permissions'];
+    const joins = [
+      { joinType: '', onCondition: 'login_details.userId = permissions_masters.userId' },
+      { joinType: '', onCondition: 'permissions.permissionId = permissions_masters.permissionId' },
+    ];
+    const attributes = ['permissionName', 'status'];
+    const whereCondition = `login_details.userId = ${user.userId}`;
 
-    const token = await signToken(user.userId, user.userRole);
+    const result = await getCustomQueryResults(tables, joins, attributes, whereCondition);
 
+    const permissions = result.map((permission) => {
+      return {
+        permissionName: permission.permissionName,
+        status: permission.status,
+      };
+    });
+
+    // Sign JWT token with user ID, role, and permissions
+    const token = await signToken(user.userId, user.userRole, permissions);
+
+    // Send response with token and permissions
     return res
       .cookie('access_token', token, {
         httpOnly: true,
-        maxAge: 3600000,
+        maxAge: 3600000, // 1 hour expiration
       })
       .status(200)
       .json({
         userAccess: user.userRole,
         message: 'User Logged In Successfully',
-        access_token: token,
+        access_token: token, // Include destructured permissions in the response
+        permission: permissions,
       });
   } catch (error) {
-    return res.status(500).json({ message: `Server Error:${error.message}` });
+    console.error(error); // Log the error for debugging
+    return res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
 
