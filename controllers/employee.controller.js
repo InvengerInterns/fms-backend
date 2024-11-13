@@ -1,10 +1,20 @@
 import Employee from '../models/Employee.model.js'; // Import the Employee model
 
-//Create Employee
+// Create Employee
 const createEmployee = async (req, res) => {
   try {
-    // Creating a new employee using the entire request body
-    const newEmployee = await Employee.create(req.body);
+    const employeeData = req.body;
+
+    // If files were uploaded, add file paths to the employee data
+    if (req.filePaths) {
+      req.filePaths.forEach((filePath) => {
+        const fieldName = filePath.fieldName;
+        employeeData[fieldName] = filePath.path;
+      });
+    }
+
+    // Creating a new employee using the entire request body including file paths
+    const newEmployee = await Employee.create(employeeData);
 
     // Responding with the newly created employee data
     res.status(201).json({
@@ -21,7 +31,7 @@ const createEmployee = async (req, res) => {
   }
 };
 
-//Get All Employees
+// Get All Employees
 const getAllEmployees = async (req, res) => {
   try {
     // Fetch all employees from the database
@@ -46,7 +56,8 @@ const getAllEmployees = async (req, res) => {
     res.status(500).json({ message: 'Error fetching employees', error });
   }
 };
-//Get Employee By EmployeeId
+
+// Get Employee By EmployeeId
 const getEmployeeById = async (req, res) => {
   try {
     const { employeeId } = req.params; // Extract the employeeId from the request parameters
@@ -67,8 +78,7 @@ const getEmployeeById = async (req, res) => {
   }
 };
 
-//Update the employee Details
-
+// Update the Employee Details
 const updateEmployeeDetails = async (req, res) => {
   try {
     const { employeeId } = req.params; // Extract the employeeId from the request parameters
@@ -76,6 +86,14 @@ const updateEmployeeDetails = async (req, res) => {
 
     // Exclude 'status' from the updateData if it exists
     delete updateData.status;
+
+    // If files were uploaded, add file paths to the update data
+    if (req.filePaths) {
+      req.filePaths.forEach((filePath) => {
+        const fieldName = filePath.fieldName;
+        updateData[fieldName] = filePath.path;
+      });
+    }
 
     // Find the employee by employeeId
     const employee = await Employee.findByPk(employeeId);
@@ -85,9 +103,7 @@ const updateEmployeeDetails = async (req, res) => {
       await employee.update(updateData);
 
       // Respond with the updated employee data
-      res
-        .status(200)
-        .json({ message: 'Employee details updated successfully', employee });
+      res.status(200).json({ message: 'Employee details updated successfully', employee });
     } else {
       // If the employee is not found, respond with a 404 status code
       res.status(404).json({ message: 'Employee not found' });
@@ -98,8 +114,7 @@ const updateEmployeeDetails = async (req, res) => {
   }
 };
 
-//Update Employee by Status
-
+// Update Employee Status
 const updateEmployeeStatus = async (req, res) => {
   try {
     const { employeeId } = req.params; // Extract the employeeId from the request parameters
@@ -116,9 +131,7 @@ const updateEmployeeStatus = async (req, res) => {
       await employee.save();
 
       // Respond with the updated employee data
-      res
-        .status(200)
-        .json({ message: 'Employee status updated successfully', employee });
+      res.status(200).json({ message: 'Employee status updated successfully', employee });
     } else {
       // If the employee is not found, respond with a 404 status code
       res.status(404).json({ message: 'Employee not found' });

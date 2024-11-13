@@ -1,7 +1,6 @@
 import Department from '../models/department.model.js'; // Import the Department model
 
 // Create Department
-
 const createDepartment = async (req, res) => {
   try {
     // Creating a new department using the request body
@@ -23,7 +22,6 @@ const createDepartment = async (req, res) => {
 };
 
 // Update Department
-
 const updateDepartmentDetails = async (req, res) => {
   try {
     const { departmentId } = req.params; // Extract the departmentId from request parameters
