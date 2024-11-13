@@ -13,10 +13,7 @@ import jwt from 'jsonwebtoken';
 import sendMail from '../utils/emailSend.util.js';
 import dotenv from 'dotenv';
 import PermissionsMaster from '../models/permissionsMaster.model.js';
-import Permissions from '../models/permissions.model.js';
 import { accessControls, permission_Ids } from '../constants.js';
-import { Sequelize } from 'sequelize';
-import sequelize from '../config/dbConnection.config.js';
 import { getCustomQueryResults } from '../utils/customQuery.util.js';
 
 dotenv.config();
@@ -48,15 +45,27 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: 'Invalid Username or Password' });
     }
 
-    const tables = ['login_details','permissions_masters', 'permissions'];
+    const tables = ['login_details', 'permissions_masters', 'permissions'];
     const joins = [
-      { joinType: '', onCondition: 'login_details.userId = permissions_masters.userId' },
-      { joinType: '', onCondition: 'permissions.permissionId = permissions_masters.permissionId' },
+      {
+        joinType: '',
+        onCondition: 'login_details.userId = permissions_masters.userId',
+      },
+      {
+        joinType: '',
+        onCondition:
+          'permissions.permissionId = permissions_masters.permissionId',
+      },
     ];
     const attributes = ['permissionName', 'status'];
     const whereCondition = `login_details.userId = ${user.userId}`;
 
-    const result = await getCustomQueryResults(tables, joins, attributes, whereCondition);
+    const result = await getCustomQueryResults(
+      tables,
+      joins,
+      attributes,
+      whereCondition
+    );
 
     const permissions = result.map((permission) => {
       return {
@@ -234,12 +243,41 @@ const getUserByEmployeeId = async (req, res) => {
       });
     }
 
+    const tables = ['login_details', 'permissions_masters', 'permissions'];
+    const joins = [
+      {
+        joinType: '',
+        onCondition: 'login_details.userId = permissions_masters.userId',
+      },
+      {
+        joinType: '',
+        onCondition:
+          'permissions.permissionId = permissions_masters.permissionId',
+      },
+    ];
+    const attributes = ['permissionName', 'status'];
+    const whereCondition = `login_details.userId = ${existingUserById.userId}`;
+
+    const result = await getCustomQueryResults(
+      tables,
+      joins,
+      attributes,
+      whereCondition
+    );
+
+    const permissions = result.map((permission) => {
+      return {
+        permissionName: permission.permissionName,
+        status: permission.status,
+      };
+    });
+
     return res.status(200).json({
       data: {
         email: existingUserById.userEmail,
         role: existingUserById.userRole,
-        userPassword: hashedPassword,
         employeeNumber: existingUserById.employeeId,
+        permissions: permissions,
       },
     });
   } catch (error) {
@@ -379,7 +417,7 @@ const sendOtp = async (req, res) => {
 
     userOTPMap.set(email, otp);
     const htmlBody = await getHtmlContent('otp', { otp: otp });
-    const subject = 'OTP- Verification FMS-TEST';
+    const subject = 'OTP - Verification FMS-TEST';
     await sendMail(email, subject, htmlBody);
     res.status(200).json({ message: 'OTP sent to your email.' });
   } catch (error) {
@@ -447,9 +485,39 @@ const getCurrentUser = async (req, res) => {
       });
     }
 
+    const tables = ['login_details', 'permissions_masters', 'permissions'];
+    const joins = [
+      {
+        joinType: '',
+        onCondition: 'login_details.userId = permissions_masters.userId',
+      },
+      {
+        joinType: '',
+        onCondition:
+          'permissions.permissionId = permissions_masters.permissionId',
+      },
+    ];
+    const attributes = ['permissionName', 'status'];
+    const whereCondition = `login_details.userId = ${decoded.id}`;
+
+    const result = await getCustomQueryResults(
+      tables,
+      joins,
+      attributes,
+      whereCondition
+    );
+
+    const permissions = result.map((permission) => {
+      return {
+        permissionName: permission.permissionName,
+        status: permission.status,
+      };
+    });
+
     if (currentUser) {
       res.status(200).json({
         currentUser,
+        permissions,
       });
     } else {
       res.status(404).json({ message: 'User not found.' });
