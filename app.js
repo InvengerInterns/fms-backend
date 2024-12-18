@@ -7,7 +7,9 @@ import expressSanitizer from 'express-sanitizer';
 import indexRoutes from './routes/index.route.js';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
+import appRoutes from './test.js';
 import { fileURLToPath } from 'url';
+import { allowedTo, protect } from './middlewares/auth.middleware.js';
 
 // Define __dirname for ES module scope
 const __filename = fileURLToPath(import.meta.url);
@@ -47,9 +49,14 @@ app.use(cookieParser());
 app.use(hpp());
 
 // Serve static files from the 'uploads' folder
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(
+  '/uploads',
+  protect,
+  allowedTo('admin'),
+  express.static(path.join(process.cwd(), 'uploads'))
+);
 
 // API route
 app.use('/api', indexRoutes);
-
+app.use('/test', appRoutes);
 export default app;
