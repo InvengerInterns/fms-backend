@@ -70,8 +70,7 @@ const fileUploadMiddleware = async (req, res, next) => {
           savedPath: `/${filePath.replace(/\\/g, '/')}`, // Ensures proper path for URL
         };
       });
-
-      console.log('Uploaded files:', req.body.uploadedFiles);
+      
     } else {
       console.log('No files uploaded');
     }

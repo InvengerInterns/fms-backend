@@ -40,7 +40,6 @@ const decryptFilePathsInEmployeeData = (employeeData) => {
 const createEmployee = async (req, res) => {
   try {
     const employeeData = req.body; // Extract employee data from the request body
-    console.log('Employee Data:', employeeData);
 
     // If uploadedFiles exist, process them
     let uploadedFiles = [];
