@@ -30,7 +30,9 @@ const BusinessUnitMaster = sequelize.define(
         allowNull: true,
     },
     status: {
-        type: DataTypes.ENUM('Active','Relieved','Active-Idle')
+        type: DataTypes.ENUM('Active','Relieved','Active-Idle'),
+        allowNull: true,
+        defaultValue: 'Active',
     }
   },
   {
