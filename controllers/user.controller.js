@@ -7,7 +7,7 @@ import {
   getHtmlContent,
 } from '../middlewares/auth.middleware.js';
 import User from '../models/user.model.js';
-import Employee from '../models/Employee.model.js';
+import Employee from '../models/employee.model.js';
 import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
 import sendMail from '../utils/emailSend.util.js';

@@ -1,11 +1,7 @@
 import Employee from '../models/employee.model.js';
+import { encryptFilePath,decryptFilePath } from '../helper/filePathEncryption.helper.js';
 
-/**
- * Helper function to process uploaded files.
- * Maps field names to their respective saved paths.
- * @param {Array} uploadedFiles - Array of uploaded file objects
- * @returns {Object} - Object mapping field names to file paths
- */
+//Helper function to process uploaded files.
 const processUploadedFiles = (uploadedFiles) => {
   return uploadedFiles.reduce((fileMap, file) => {
     fileMap[file.fieldName] = file.savedPath.replace(
@@ -16,11 +12,31 @@ const processUploadedFiles = (uploadedFiles) => {
   }, {});
 };
 
-/**
- * Create a new employee.
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
+// Helper function to decrypt file paths in employee data
+const decryptFilePathsInEmployeeData = (employeeData) => {
+  const fieldsToDecrypt = [
+    'employeeImage',
+    'passportphotoLink',
+    'normalphotoLink',
+    'resumelink',
+  ];
+
+  const decryptedData = { ...employeeData };
+
+  for (const field of fieldsToDecrypt) {
+    if (decryptedData[field]) {
+      try {
+        decryptedData[field] = decryptFilePath(decryptedData[field]);
+      } catch (error) {
+        console.error(`Error decrypting file path for field "${field}":`, error);
+      }
+    }
+  }
+
+  return decryptedData;
+};
+
+// Create a new employee
 const createEmployee = async (req, res) => {
   try {
     const employeeData = req.body; // Extract employee data from the request body
@@ -35,14 +51,25 @@ const createEmployee = async (req, res) => {
     }
 
     if (uploadedFiles.length > 0) {
-      const fileMap = await processUploadedFiles(uploadedFiles); // Map field names to paths
+      // Encrypt file paths before storing
+      const encryptedFiles = uploadedFiles.map((file) => {
+        if (typeof file.savedPath === 'string') {
+          return {
+            ...file,
+            savedPath: encryptFilePath(file.savedPath), // Encrypt the savedPath
+          };
+        } else {
+          throw new Error('Invalid savedPath format. Expected a string.');
+        }
+      });
+
+      const fileMap = await processUploadedFiles(encryptedFiles); // Map field names to paths
       Object.assign(employeeData, fileMap); // Merge file paths into employee data
     }
 
     // Create a new employee
     const newEmployee = await Employee.create(employeeData);
 
-    // Respond with the newly created employee data
     res.status(201).json({
       message: 'Employee created successfully',
       employee: newEmployee,
@@ -56,11 +83,7 @@ const createEmployee = async (req, res) => {
   }
 };
 
-/**
- * Update employee details.
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
+// Update employee details.
 const updateEmployeeDetails = async (req, res) => {
   try {
     const { employeeId } = req.params; // Extract employeeId from request parameters
@@ -101,7 +124,24 @@ const updateEmployeeDetails = async (req, res) => {
 
 const getEmployeeById = async (req, res) => {};
 
-const getAllEmployees = async (req, res) => {};
+// Get all employees
+const getAllEmployees = async (req, res) => {
+  try {
+    const employees = await Employee.findAll(); // Fetch all employees
+
+    const decryptedEmployees = employees.map((employee) =>
+      decryptFilePathsInEmployeeData(employee.dataValues)
+    ); // Decrypt file paths for each employee
+
+    res.status(200).json(decryptedEmployees); // Send the decrypted data
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    res.status(500).json({
+      message: 'Error fetching employees',
+      error: error.message,
+    });
+  }
+};
 
 const updateEmployeeStatus = async (req, res) => {};
 
