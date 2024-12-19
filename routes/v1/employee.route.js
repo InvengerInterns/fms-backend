@@ -7,12 +7,19 @@ import {
   updateEmployeeStatus,
 } from '../../controllers/employee.controller.js';
 import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
+import fileUploadMiddleware from '../../middlewares/filehandle.middleware.js';
 
 const router = express.Router();
 
 // create Employee Route
 
-router.post('/add-employee', protect, allowedTo('admin'), createEmployee);
+router.post(
+  '/add-employee',
+  protect,
+  allowedTo('admin'),
+  fileUploadMiddleware,
+  createEmployee
+);
 
 // Get All Employee Route
 
@@ -42,6 +49,7 @@ router.put(
   '/update-employee-status/:employeeId',
   protect,
   allowedTo('admin'),
+  fileUploadMiddleware,
   updateEmployeeStatus
 );
 

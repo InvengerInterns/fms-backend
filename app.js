@@ -6,28 +6,35 @@ import hpp from 'hpp';
 import expressSanitizer from 'express-sanitizer';
 import indexRoutes from './routes/index.route.js';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import appRoutes from './test.js';
+import { fileURLToPath } from 'url';
+import { allowedTo, protect } from './middlewares/auth.middleware.js';
+
+// Define __dirname for ES module scope
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
 // Rate limiter setup
 // const limiter = rateLimit({
-//   max: parseInt(process.env.RATE_LIMIT_MAX, 10), // Convert from string to number
-//   windowMs: parseInt(process.env.RATE_LIMIT_TIME, 10) * 60 * 60 * 1000, // Convert hours to milliseconds
+//   max: parseInt(process.env.RATE_LIMIT_MAX, 10),
+//   windowMs: parseInt(process.env.RATE_LIMIT_TIME, 10) * 60 * 60 * 1000,
 //   message: 'Too many requests from this IP, please try again later!',
 // });
-
 // app.use(limiter);
 
-//Json Body Input
+// JSON Body Input
 app.use(express.json());
 
 // Set security HTTP headers
 app.use(helmet());
 
-//XSS Sanitizer Middleware
+// XSS Sanitizer Middleware
 app.use(expressSanitizer());
 
-//CORS configuration
+// CORS configuration
 app.use(
   cors({
     origin: true,
@@ -35,13 +42,21 @@ app.use(
   })
 );
 
-//Cookie handling middleware
+// Cookie handling middleware
 app.use(cookieParser());
 
-//HTTP Parameter Poisoning Protection Middleware
+// HTTP Parameter Pollution Protection Middleware
 app.use(hpp());
 
-//API route
-app.use('/api', indexRoutes);
+// Serve static files from the 'uploads' folder
+app.use(
+  '/uploads',
+  protect,
+  allowedTo('admin'),
+  express.static(path.join(process.cwd(), 'uploads'))
+);
 
+// API route
+app.use('/api', indexRoutes);
+app.use('/test', appRoutes);
 export default app;
