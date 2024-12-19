@@ -1,11 +1,15 @@
 import Employee from '../models/employee.model.js';
-import { encryptFilePath,decryptFilePath } from '../helper/filePathEncryption.helper.js';
+import {
+  encryptFilePath,
+  decryptFilePath,
+} from '../helper/filePathEncryption.helper.js';
+import { Op } from 'sequelize';
 
 //Helper function to process uploaded files.
 const processUploadedFiles = (uploadedFiles) => {
   return uploadedFiles.reduce((fileMap, file) => {
     fileMap[file.fieldName] = file.savedPath.replace(
-      'C:\\\\Users\\\\Nishanth Shivananda\\\\Desktop\\\\Projects\\\\Office-Based\\\\Node-JS\\\\fms-backend\\\\',
+      '\\\\fms-backend\\\\',
       'uploads/'
     );
     return fileMap;
@@ -28,7 +32,10 @@ const decryptFilePathsInEmployeeData = (employeeData) => {
       try {
         decryptedData[field] = decryptFilePath(decryptedData[field]);
       } catch (error) {
-        console.error(`Error decrypting file path for field "${field}":`, error);
+        console.error(
+          `Error decrypting file path for field "${field}":`,
+          error
+        );
       }
     }
   }
@@ -121,7 +128,41 @@ const updateEmployeeDetails = async (req, res) => {
   }
 };
 
-const getEmployeeById = async (req, res) => {};
+// Get employee by ID
+const getEmployeeById = async (req, res) => {
+  try {
+    const { employeeId } = req.params; // Get the employee ID from request parameters
+
+    // Fetch the employee by ID
+    const employee = await Employee.findOne({
+      where: {
+        employeeId,
+        status: {
+          [Op.ne]: 0, // status is not equal to 0
+        },
+      },
+    });
+
+    if (!employee) {
+      return res.status(404).json({
+        message: `Employee with ID ${employeeId} not found`,
+      });
+    }
+
+    // Decrypt the file paths for the employee data
+    const decryptedEmployee = decryptFilePathsInEmployeeData(
+      employee.dataValues
+    );
+
+    res.status(200).json(decryptedEmployee); //Send the decrypted data
+  } catch (error) {
+    console.error('Error fetching employee:', error);
+    res.status(500).json({
+      message: 'Error fetching employee',
+      error: error.message,
+    });
+  }
+};
 
 // Get all employees
 const getAllEmployees = async (req, res) => {

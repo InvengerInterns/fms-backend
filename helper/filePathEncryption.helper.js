@@ -24,7 +24,8 @@ export const encryptFilePath = (filePath) => {
 export const decryptFilePath = (encryptedData) => {
   try {
     if (!encryptedData) return encryptedData; // Skip if value is null or undefined
-    if (!encryptedData.includes(':') || encryptedData.includes('https://')) return encryptedData; // Return as is if not encrypted
+    if (!encryptedData.includes(':') || encryptedData.includes('https://'))
+      return encryptedData; // Return as is if not encrypted
 
     const [ivHex, encryptedText] = encryptedData.split(':');
     const iv = Buffer.from(ivHex, 'hex');

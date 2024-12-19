@@ -2,9 +2,17 @@ import Permissions from '../models/permissions.model.js';
 
 const createPermission = async (req, res) => {
   try {
-    const { permissionName } = req.body;
-    const permission = await Permissions.create({ permissionName });
-    res.status(201).json(permission);
+    const permissions = req.body; // Expecting an array of permission objects
+    if (!Array.isArray(permissions)) {
+      return res
+        .status(400)
+        .json({ message: 'Input must be an array of permissions.' });
+    }
+
+    const createdPermissions = await Permissions.bulkCreate(permissions, {
+      returning: true,
+    });
+    res.status(201).json(createdPermissions);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
