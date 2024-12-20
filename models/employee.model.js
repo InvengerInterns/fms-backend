@@ -33,10 +33,6 @@ const Employee = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    workEmail: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
     bloodGroup: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -85,7 +81,6 @@ const Employee = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-
     joinDate: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -98,11 +93,6 @@ const Employee = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    resumelink: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-
     status: {
       type: DataTypes.INTEGER,
       allowNull: true,

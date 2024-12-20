@@ -13,6 +13,10 @@ const EmployeeProfessionalDetailsMaster = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    workEmail: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    }, 
     jobPositionId: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -32,6 +36,10 @@ const EmployeeProfessionalDetailsMaster = sequelize.define(
     businessUnitId: {
         type: DataTypes.INTEGER,
         allowNull: true,
+    },
+    resumelink: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   {

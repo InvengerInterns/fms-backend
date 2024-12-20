@@ -70,6 +70,7 @@ const createEmployee = async (req, res) => {
       });
 
       const fileMap = await processUploadedFiles(encryptedFiles); // Map field names to paths
+      console.log('fileMap:', fileMap);
       Object.assign(employeeData, fileMap); // Merge file paths into employee data
     }
 
