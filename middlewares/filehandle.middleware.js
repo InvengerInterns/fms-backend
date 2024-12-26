@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import moment from 'moment';
 import mime from 'mime-types'; // To validate file extensions
+import Employee from '../models/employee.model.js';
 
 // Allowed MIME types
 const allowedMimeTypes = [

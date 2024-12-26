@@ -7,6 +7,7 @@ import { Op } from 'sequelize';
 import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
 import { getCustomQueryResults } from '../utils/customQuery.util.js';
 import { employeeStatus } from '../constants.js';
+import BusinessUnitMaster from '../models/buisnessUnitMaster.model.js';
 
 //Helper function to process uploaded files.
 const processUploadedFiles = (uploadedFiles) => {
@@ -80,11 +81,14 @@ const createEmployee = async (req, res) => {
     const newEmployeeProfile =
       await EmployeeProfessionalDetailsMaster.create(employeeData);
 
+    const buisnessUnitData = await BusinessUnitMaster.create(employeeData); 
+
     res.status(201).json({
       message: 'Employee created successfully',
       employeeData: {
         'basic-details': newEmployee,
         'professional-details': newEmployeeProfile,
+        'client-data': buisnessUnitData,
       },
     });
   } catch (error) {
