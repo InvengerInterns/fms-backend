@@ -27,3 +27,9 @@ export const permission_Ids = {
   EXIT_FORMALITIES: 11,
   CLIENT_HISTORY: 12,
 };
+
+export const employeeStatus = {
+  ACTIVE: 1,
+  RELIEVED: 0,
+  ACTIVE_IDLE: 2,
+}

@@ -6,6 +6,7 @@ import {
 import { Op } from 'sequelize';
 import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
 import { getCustomQueryResults } from '../utils/customQuery.util.js';
+import { employeeStatus } from '../constants.js';
 
 //Helper function to process uploaded files.
 const processUploadedFiles = (uploadedFiles) => {
@@ -130,7 +131,7 @@ const updateEmployeeDetails = async (req, res) => {
     if (employee) {
       await employee.update(updateData); // Update employee details
       await employeeProfile.update(updateData); // Update employee professional details
-      
+
       res
         .status(200)
         .json({ message: 'Employee details updated successfully', employee });
@@ -216,9 +217,20 @@ const getAllEmployees = async (req, res) => {
       whereCondition
     );
 
-    const decryptedEmployees = results.map((result) =>
-      decryptFilePathsInEmployeeData(result)
-    ); // Decrypt file paths for each employee
+    const decryptedEmployees = results.map((result) => {
+      const decryptedData = decryptFilePathsInEmployeeData(result);
+      return {
+        ...decryptedData,
+        statusText:
+          decryptedData.status === 1
+            ? employeeStatus.ACTIVE
+            : decryptedData.status === 0
+            ? employeeStatus.RELIEVED
+            : decryptedData.status === 2
+            ? employeeStatus.ACTIVE_IDLE
+            : 'Unknown', // Default case for unexpected status
+      };
+    });
 
     res.status(200).json(decryptedEmployees); // Send the decrypted data
   } catch (error) {
