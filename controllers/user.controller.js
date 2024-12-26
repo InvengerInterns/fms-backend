@@ -13,8 +13,9 @@ import jwt from 'jsonwebtoken';
 import sendMail from '../utils/emailSend.util.js';
 import dotenv from 'dotenv';
 import PermissionsMaster from '../models/permissionsMaster.model.js';
-import { accessControls, permission_Ids } from '../constants.js';
+import { accessControls, permission_Ids, users } from '../constants.js';
 import { getCustomQueryResults } from '../utils/customQuery.util.js';
+import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
 
 dotenv.config();
 
@@ -165,6 +166,31 @@ const addUserWithEmployeeId = async (req, res) => {
       },
     });
 
+    const employeeProfessionalData =
+      await EmployeeProfessionalDetailsMaster.findOne({
+        where: {
+          employeeId: employeeId,
+        },
+      });
+
+    const existingUser = await User.findOne({
+      where: {
+        userEmployeeId: employeeId,
+      },
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: 'User Already Exists!!',
+      });
+    }
+
+    if (!employeeProfessionalData) {
+      return res.status(404).json({
+        message: 'Employee Professional Data Not Found',
+      });
+    }
+
     if (!employeeData) {
       return res.status(404).json({
         message: 'Employee Not Found',
@@ -172,8 +198,9 @@ const addUserWithEmployeeId = async (req, res) => {
     }
 
     const newUser = await User.create({
-      userEmail: employeeData.workEmail,
+      userEmail: employeeProfessionalData.workEmail,
       userEmployeeId: employeeData.employeeId,
+      userRole: users.ADMIN,
     });
 
     await newUser.save();
@@ -183,8 +210,8 @@ const addUserWithEmployeeId = async (req, res) => {
     });
 
     const permissionsWithStatus = {
-      [permission_Ids.ABOUT]: accessControls.WRITE,
-      [permission_Ids.INTERVIEWS]: accessControls.WRITE,
+      [permission_Ids.ABOUT]: accessControls.MODIFY,
+      [permission_Ids.INTERVIEWS]: accessControls.MODIFY,
       [permission_Ids.SALARY_SLIP]: accessControls.NO_ACCESS,
       [permission_Ids.OFFER_CONFIRMATION]: accessControls.NO_ACCESS,
       [permission_Ids.OFFER_LETTER]: accessControls.NO_ACCESS,

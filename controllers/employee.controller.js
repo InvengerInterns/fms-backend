@@ -4,14 +4,13 @@ import {
   decryptFilePath,
 } from '../helper/filePathEncryption.helper.js';
 import { Op } from 'sequelize';
+import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
+import { getCustomQueryResults } from '../utils/customQuery.util.js';
 
 //Helper function to process uploaded files.
 const processUploadedFiles = (uploadedFiles) => {
   return uploadedFiles.reduce((fileMap, file) => {
-    fileMap[file.fieldName] = file.savedPath.replace(
-      '\\\\fms-backend\\\\',
-      'uploads/'
-    );
+    fileMap[file.fieldName] = file.savedPath.replace('/', 'uploads/');
     return fileMap;
   }, {});
 };
@@ -77,9 +76,15 @@ const createEmployee = async (req, res) => {
     // Create a new employee
     const newEmployee = await Employee.create(employeeData);
 
+    const newEmployeeProfile =
+      await EmployeeProfessionalDetailsMaster.create(employeeData);
+
     res.status(201).json({
       message: 'Employee created successfully',
-      employee: newEmployee,
+      employeeData: {
+        'basic-details': newEmployee,
+        'professional-details': newEmployeeProfile,
+      },
     });
   } catch (error) {
     console.error('Error creating employee:', error);
@@ -110,10 +115,22 @@ const updateEmployeeDetails = async (req, res) => {
       Object.assign(updateData, fileMap); // Merge file paths into update data
     }
 
-    const employee = await Employee.findByPk(employeeId); // Fetch employee by ID
+    const employee = await Employee.findOne({
+      where: {
+        employeeId,
+      },
+    }); // Fetch employee by ID
+
+    const employeeProfile = await EmployeeProfessionalDetailsMaster.findOne({
+      where: {
+        employeeId,
+      },
+    });
 
     if (employee) {
       await employee.update(updateData); // Update employee details
+      await employeeProfile.update(updateData); // Update employee professional details
+      
       res
         .status(200)
         .json({ message: 'Employee details updated successfully', employee });
@@ -144,6 +161,12 @@ const getEmployeeById = async (req, res) => {
       },
     });
 
+    const employeeProfile = await EmployeeProfessionalDetailsMaster.findOne({
+      where: {
+        employeeId,
+      },
+    });
+
     if (!employee) {
       return res.status(404).json({
         message: `Employee with ID ${employeeId} not found`,
@@ -155,7 +178,14 @@ const getEmployeeById = async (req, res) => {
       employee.dataValues
     );
 
-    res.status(200).json(decryptedEmployee); //Send the decrypted data
+    const decryptedEmployeeProfile = decryptFilePathsInEmployeeData(
+      employeeProfile.dataValues
+    );
+
+    res.status(200).json({
+      'basic-details': decryptedEmployee,
+      'professional-details': decryptedEmployeeProfile,
+    }); //Send the decrypted data
   } catch (error) {
     console.error('Error fetching employee:', error);
     res.status(500).json({
@@ -168,10 +198,26 @@ const getEmployeeById = async (req, res) => {
 // Get all employees
 const getAllEmployees = async (req, res) => {
   try {
-    const employees = await Employee.findAll(); // Fetch all employees
+    const tables = ['employees', 'employee_professional_details_masters'];
+    const joins = [
+      {
+        joinType: '',
+        onCondition:
+          'employees.employeeId = employee_professional_details_masters.employeeId',
+      },
+    ];
+    const attributes = null;
+    const whereCondition = `employees.status != 0`;
 
-    const decryptedEmployees = employees.map((employee) =>
-      decryptFilePathsInEmployeeData(employee.dataValues)
+    const results = await getCustomQueryResults(
+      tables,
+      joins,
+      attributes,
+      whereCondition
+    );
+
+    const decryptedEmployees = results.map((result) =>
+      decryptFilePathsInEmployeeData(result)
     ); // Decrypt file paths for each employee
 
     res.status(200).json(decryptedEmployees); // Send the decrypted data

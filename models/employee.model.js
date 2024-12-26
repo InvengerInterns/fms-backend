@@ -21,6 +21,10 @@ const Employee = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    gender: {
+      type: DataTypes.ENUM('Male', 'Female'),
+      allowNull: false,
+    },
     phoneNumber: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -54,6 +58,10 @@ const Employee = sequelize.define(
       allowNull: true,
     },
     employeeImage: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    employeeImageLowResolution: {
       type: DataTypes.STRING,
       allowNull: true,
     },

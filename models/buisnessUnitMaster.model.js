@@ -14,26 +14,26 @@ const BusinessUnitMaster = sequelize.define(
       allowNull: true,
     },
     businessUnitId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     clientId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     startDate: {
-        type: DataTypes.DATE,
-        allowNull: true,
+      type: DataTypes.DATE,
+      allowNull: true,
     },
     endDate: {
-        type: DataTypes.DATE,
-        allowNull: true,
+      type: DataTypes.DATE,
+      allowNull: true,
     },
     status: {
-        type: DataTypes.ENUM('Active','Relieved','Active-Idle'),
-        allowNull: true,
-        defaultValue: 'Active-Idle',
-    }
+      type: DataTypes.ENUM('Active', 'Relieved', 'Active-Idle'),
+      allowNull: true,
+      defaultValue: 'Active-Idle',
+    },
   },
   {
     timestamps: true,

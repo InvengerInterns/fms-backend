@@ -13,21 +13,21 @@ const DepartmentMaster = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    buisnessUnitId: { 
-        type: DataTypes.INTEGER,
-        allowNull: true,
+    buisnessUnitId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
-    clientId: { 
-        type: DataTypes.INTEGER,
-        allowNull: true,
+    clientId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
-    managerId: { 
-        type: DataTypes.INTEGER,
-        allowNull: true,
+    managerId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
-    teamLeadId: { 
-        type: DataTypes.INTEGER,
-        allowNull: true,
+    teamLeadId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
   },
   { timestamps: true }
