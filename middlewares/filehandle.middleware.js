@@ -2,9 +2,25 @@ import multer from 'multer';
 import fs from 'fs-extra';
 import path from 'path';
 import moment from 'moment';
+import mime from 'mime-types'; // To validate file extensions
+
+// Allowed MIME types
+const allowedMimeTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+];
 
 // Set the base directory for uploads
 const uploadDirectory = path.resolve('uploads');
+
+// Max file size (in bytes): e.g., 5 MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 // Multer storage setup
 const storage = multer.diskStorage({
@@ -12,12 +28,24 @@ const storage = multer.diskStorage({
     try {
       const { employeeId } = req.body;
 
+      const existingEmployee = await Employee.findOne({ where: { employeeId } });
+
+      if (existingEmployee) {
+        return res.status(404).json({ message: 'Employee Already found' });
+      }
+
       if (!employeeId) {
         return cb(new Error('Employee ID is required'), null);
       }
 
+      // Sanitize employeeId to prevent directory traversal attacks
+      const sanitizedEmployeeId = employeeId.replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!sanitizedEmployeeId) {
+        return cb(new Error('Invalid Employee ID'), null);
+      }
+
       // Create the employee-specific folder if it doesn't exist
-      const employeeFolder = path.join(uploadDirectory, employeeId);
+      const employeeFolder = path.join(uploadDirectory, sanitizedEmployeeId);
       await fs.ensureDir(employeeFolder);
 
       cb(null, employeeFolder); // Set destination folder to the employee's folder
@@ -32,11 +60,18 @@ const storage = multer.diskStorage({
       return cb(new Error('Employee ID is required'), null);
     }
 
-    // Construct filename: realname + today's date + employeeId + extension
-    const originalName = path.parse(file.originalname).name; // Extract file name without extension
+    // Sanitize file name to prevent injection attacks
+    const sanitizedFileName = path
+      .parse(file.originalname)
+      .name.replace(/[^a-zA-Z0-9_-]/g, '');
+
+    if (!sanitizedFileName) {
+      return cb(new Error('Invalid file name'), null);
+    }
+
     const extension = path.extname(file.originalname); // Extract file extension
     const today = moment().format('YYYY-MM-DD-HHMMss'); // Today's date in YYYYMMDD format
-    const newFilename = `${originalName}_${today}_${employeeId}${extension}`;
+    const newFilename = `${sanitizedFileName}_${today}_${employeeId}${extension}`;
 
     cb(null, newFilename);
   },
@@ -45,6 +80,19 @@ const storage = multer.diskStorage({
 // Initialize multer for multiple file uploads
 const upload = multer({
   storage,
+  limits: {
+    fileSize: MAX_FILE_SIZE, // Set file size limit
+  },
+  fileFilter: (req, file, cb) => {
+    const mimetype = file.mimetype;
+    const extension = mime.extension(mimetype);
+
+    if (!allowedMimeTypes.includes(mimetype) || !extension) {
+      return cb(new Error('Unsupported file type'), false);
+    }
+
+    cb(null, true);
+  },
 }).any(); // Accept multiple files with any field name
 
 // Middleware to handle file upload

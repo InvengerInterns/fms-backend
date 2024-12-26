@@ -29,7 +29,7 @@ export const permission_Ids = {
 };
 
 export const employeeStatus = {
-  ACTIVE: 1,
-  RELIEVED: 0,
-  ACTIVE_IDLE: 2,
+  ACTIVE: 'Active',
+  RELIEVED: 'Relieved',
+  ACTIVE_IDLE: 'Active-Idle',
 }
