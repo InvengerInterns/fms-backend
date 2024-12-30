@@ -32,4 +32,4 @@ export const employeeStatus = {
   ACTIVE: 'Active',
   RELIEVED: 'Relieved',
   ACTIVE_IDLE: 'Active-Idle',
-}
+};

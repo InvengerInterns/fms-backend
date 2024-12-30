@@ -10,7 +10,7 @@ const User = sequelize.define(
       autoIncrement: true,
     },
     userEmail: {
-      type: DataTypes.STRING(64),
+      type: DataTypes.STRING(100),
       unique: true,
     },
     userPassword: {

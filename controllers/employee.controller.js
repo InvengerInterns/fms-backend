@@ -81,7 +81,7 @@ const createEmployee = async (req, res) => {
     const newEmployeeProfile =
       await EmployeeProfessionalDetailsMaster.create(employeeData);
 
-    const buisnessUnitData = await BusinessUnitMaster.create(employeeData); 
+    const buisnessUnitData = await BusinessUnitMaster.create(employeeData);
 
     res.status(201).json({
       message: 'Employee created successfully',
@@ -132,10 +132,41 @@ const updateEmployeeDetails = async (req, res) => {
       },
     });
 
-    if (employee) {
-      await employee.update(updateData); // Update employee details
-      await employeeProfile.update(updateData); // Update employee professional details
+    const mostRecentBusinessUnit = await BusinessUnitMaster.findOne({
+      where: {
+        employeeId,
+        endDate: null, // Get the record with no endDate
+      },
+      order: [['createdAt', 'DESC']], // Get the most recent record based on creation time
+    });
 
+    if (employee) {
+      // Update employee details
+      await employee.update(updateData);
+      // Update employee professional details
+      await employeeProfile.update(updateData);
+
+      if (updateData.endDate) {
+        if (mostRecentBusinessUnit) {
+          // Update endDate and set status to 'Served'
+          await mostRecentBusinessUnit.update({
+            endDate: updateData.endDate,
+            status: 'Served',
+          });
+        }
+      }
+      // Handle startDate changes
+      if (
+        mostRecentBusinessUnit.startDate !== updateData.startDate // startDate has changed
+      ) {
+        // Insert a new record
+        await BusinessUnitMaster.create({
+          employeeId,
+          startDate: updateData.startDate,
+          ...updateData, // Include other fields if necessary
+        });
+      } 
+      
       res
         .status(200)
         .json({ message: 'Employee details updated successfully', employee });
@@ -229,10 +260,10 @@ const getAllEmployees = async (req, res) => {
           decryptedData.status === 1
             ? employeeStatus.ACTIVE
             : decryptedData.status === 0
-            ? employeeStatus.RELIEVED
-            : decryptedData.status === 2
-            ? employeeStatus.ACTIVE_IDLE
-            : 'Unknown', // Default case for unexpected status
+              ? employeeStatus.RELIEVED
+              : decryptedData.status === 2
+                ? employeeStatus.ACTIVE_IDLE
+                : 'Unknown', // Default case for unexpected status
       };
     });
 

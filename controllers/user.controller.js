@@ -16,6 +16,7 @@ import PermissionsMaster from '../models/permissionsMaster.model.js';
 import { accessControls, permission_Ids, users } from '../constants.js';
 import { getCustomQueryResults } from '../utils/customQuery.util.js';
 import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
+import { encryptEmployeeId } from '../helper/filePathEncryption.helper.js';
 
 dotenv.config();
 
@@ -197,14 +198,17 @@ const addUserWithEmployeeId = async (req, res) => {
       });
     }
 
+    console.log('Employee Data:', employeeProfessionalData);
+    
     const newUser = await User.create({
       userEmail: employeeProfessionalData.workEmail,
       userEmployeeId: employeeData.employeeId,
-      userRole: users.ADMIN,
+      userRole: 'admin',
     });
 
     await newUser.save();
 
+    console.log('New User:', newUser);
     const newUserData = await User.findOne({
       order: [['userId', 'DESC']],
     });
@@ -236,21 +240,24 @@ const addUserWithEmployeeId = async (req, res) => {
       )
     );
 
+    const encryptedEmployeeId = await encryptEmployeeId(employeeData.employeeId);
+    console.log('Encrypted Employee Id:', encryptedEmployeeId);
     //link = `http://localhost:5000/api/v1/user/password-update/${employeeData.employeeId}`;
-    link = `http://localhost:5000/api/v1/user/password-update`;
+    link = `http://localhost:1234/setpassword/${encryptedEmployeeId}`;
     const htmlBody = await getHtmlContent('new-password', {
       username: employeeData.firstName,
       link: link,
     });
     const subject = 'User Password Creation FMS-TEST';
-    await sendMail(employeeData.workEmail, subject, htmlBody);
+    console.log('Sending email to:-', employeeData.workEmail);
+    await sendMail(employeeProfessionalData.workEmail, subject, htmlBody);
 
     res.status(201).json({
       message: 'User Created and Email for password creation has been Sent',
       permissions: newUserPermissions,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: `Internal Server Error: ${error.message}` });
   }
 };
 

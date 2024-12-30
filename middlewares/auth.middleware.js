@@ -150,6 +150,8 @@ const getHtmlContent = async (type, options = {}) => {
     let filePath;
     let htmlContent;
 
+    console.log('Options:', options);
+
     // Determine the HTML template file based on the email type
     if (type.toLowerCase() === 'otp' && options.otp) {
       filePath = path.join(__dirname, '../public/otp_body.html');

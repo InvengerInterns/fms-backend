@@ -29,10 +29,12 @@ const storage = multer.diskStorage({
     try {
       const { employeeId } = req.body;
 
-      const existingEmployee = await Employee.findOne({ where: { employeeId } });
+      const existingEmployee = await Employee.findOne({
+        where: { employeeId },
+      });
 
       if (existingEmployee) {
-        return res.status(404).json({ message: 'Employee Already found' });
+        return cb(new Error('Employee ID already exists'), null);
       }
 
       if (!employeeId) {

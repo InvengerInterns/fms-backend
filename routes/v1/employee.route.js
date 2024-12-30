@@ -40,6 +40,7 @@ router.put(
   '/update-employee-details/:employeeId',
   protect,
   allowedTo('admin'),
+  fileUploadMiddleware,
   updateEmployeeDetails
 );
 
