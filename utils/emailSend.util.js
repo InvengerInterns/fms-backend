@@ -9,7 +9,7 @@ const sendMail = async (toEmail, emailSubject, emailBody) => {
 
     // Use the sendMail method on the transporter object
     await transporter.sendMail({
-      from: `"FMS-TEST" <invengerinterns@outlook.com>`,
+      from: `"Safile-HRMS" <invengerinterns@outlook.com>`,
       to: toEmail,
       subject: emailSubject,
       html: emailBody,
