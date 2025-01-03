@@ -13,19 +13,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-//JWT Signing
-const signToken = async (id, role, permission) => {
-  const token = await jwt.sign(
-    { id, role, permission },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: process.env.JWT_LIFESPAN,
-    }
-  );
-  return token;
-};
-
-//JWT Verifying Token
+// JWT Verifying Token with Expiry Check
 const protect = async (req, res, next) => {
   try {
     const rolesToCheck = ['user'];
@@ -38,20 +26,34 @@ const protect = async (req, res, next) => {
       return res.status(404).json({ message: 'User Not LoggedIn' });
     }
 
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    // Decode the token without verifying to check the expiration first
+    const decoded = jwt.decode(token, { complete: true });
+    if (!decoded) {
+      return res.status(401).json({ message: 'Invalid Token' });
+    }
+
+    // Check if the token is expired
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+    if (decoded.payload.exp < currentTime) {
+      return res.status(401).json({ "message": 'Token Expired. Please Login Again.', "statusCode": 'TokenExpired' });
+    }
+
+    // Verify the token
+    const verifiedToken = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
     let currentUser = null;
 
-    if (decoded.role === 'admin') {
+    if (verifiedToken.role === 'admin') {
       currentUser = await User.findOne({
         where: {
-          userId: decoded.id,
+          userId: verifiedToken.id,
         },
         attributes: ['userId', 'userEmail', 'userRole', 'userStatus'],
       });
     } else {
       currentUser = await User.findOne({
         where: {
-          userId: decoded.id,
+          userId: verifiedToken.id,
           userRole: rolesToCheck,
         },
         attributes: ['userId', 'userEmail', 'userRole', 'userStatus'],
@@ -59,16 +61,14 @@ const protect = async (req, res, next) => {
     }
 
     if (!currentUser) {
-      return res
-        .status(400)
-        .json({ message: 'User Session Expired or No loner exists' });
+      return res.status(400).json({ message: 'User Session Expired or No longer exists' });
     }
 
     req.user = currentUser;
 
     next();
   } catch (error) {
-    return res.status(500).json({ message: `Error Occured: ${error.message}` });
+    return res.status(500).json({ message: `Error Occurred: ${error.message}` });
   }
 };
 
@@ -183,7 +183,6 @@ const getHtmlContent = async (type, options = {}) => {
 export {
   hashPassword,
   isValidPassword,
-  signToken,
   checkPassword,
   prepareOtp,
   protect,

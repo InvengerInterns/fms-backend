@@ -23,6 +23,14 @@ const User = sequelize.define(
     userEmployeeId: {
       type: DataTypes.INTEGER,
     },
+    refreshToken: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    refreshTokenIv:{
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
     userStatus: {
       type: DataTypes.INTEGER,
       defaultValue: 1,

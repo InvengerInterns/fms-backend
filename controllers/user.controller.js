@@ -3,9 +3,9 @@ import {
   prepareOtp,
   hashPassword,
   isValidPassword,
-  signToken,
   getHtmlContent,
 } from '../middlewares/auth.middleware.js';
+import { signToken } from '../utils/user.util.js';
 import User from '../models/user.model.js';
 import Employee from '../models/employee.model.js';
 import { promisify } from 'util';
@@ -17,6 +17,8 @@ import { accessControls, permission_Ids, users } from '../constants.js';
 import { getCustomQueryResults } from '../utils/customQuery.util.js';
 import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
 import { encryptEmployeeId } from '../helper/filePathEncryption.helper.js';
+import { decryptToken, encryptToken } from '../helper/token.helper.js';
+import { Op } from 'sequelize';
 
 dotenv.config();
 
@@ -77,19 +79,30 @@ const loginUser = async (req, res) => {
     });
 
     // Sign JWT token with user ID, role, and permissions
-    const token = await signToken(user.userId, user.userRole, permissions);
+    const accessToken = await signToken(user.userId, user.userRole, process.env.JWT_SECRET, permissions, process.env.JWT_LIFESPAN);
+    const refreshToken = await signToken(user.userId, user.userRole, process.env.REFRESH_TOKEN_SECRET, null, process.env.REFRESH_TOKEN_LIFESPAN);
+
+    const { encryptedToken, iv } = await encryptToken(refreshToken);
+
+    await User.update(
+      { refreshToken: encryptedToken, refreshTokenIv: iv },
+      { where: { userId: user.userId } }
+    );
 
     // Send response with token and permissions
     return res
-      .cookie('access_token', token, {
+      .cookie('access_token', accessToken, {
         httpOnly: true,
         maxAge: 3600000, // 1 hour expiration
+      })
+      .cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        maxAge: 604800000, // 1 week expiration
       })
       .status(200)
       .json({
         userAccess: user.userRole,
         message: 'User Logged In Successfully',
-        access_token: token, // Include destructured permissions in the response
         permission: permissions,
       });
   } catch (error) {
@@ -563,17 +576,130 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+//Get Refresh Token
+const getRefreshToken = async (req, res) => {
+  try {
+    const { refresh_token } = req.cookies;
+    let decoded;
+
+    if (!refresh_token) {
+      return res.status(401).json({ message: 'Refresh token missing' });
+    }
+
+    // Decode the refresh token to extract userId
+    decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
+
+    console.log('Decoded:', decoded);
+
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({ "message": 'Invalid refresh token' });
+    }
+
+    // Fetch user by userId and ensure they have a valid refresh token
+    const user = await User.findOne({
+      where: {
+        userId: decoded.id,
+        refreshToken: { [Op.not]: null },
+      },
+    });
+
+    if (!user) {
+      return res.status(403).json({ message: 'Unauthorized refresh token' });
+    }
+
+    const tables = ['login_details', 'permissions_masters', 'permissions'];
+    const joins = [
+      {
+        joinType: '',
+        onCondition: 'login_details.userId = permissions_masters.userId',
+      },
+      {
+        joinType: '',
+        onCondition:
+          'permissions.permissionId = permissions_masters.permissionId',
+      },
+    ];
+    const attributes = ['permissionName', 'status'];
+    const whereCondition = `login_details.userId = ${user.userId}`;
+
+    const result = await getCustomQueryResults(
+      tables,
+      joins,
+      attributes,
+      whereCondition
+    );
+
+    const permissions = result.map((permission) => {
+      return {
+        permissionName: permission.permissionName,
+        status: permission.status,
+      };
+    });
+
+    // Decrypt the refresh token stored in the database
+    const decryptedRefreshToken = await decryptToken(user.refreshToken, user.refreshTokenIv);
+
+    // Compare the provided token with the decrypted token
+    if (refresh_token !== decryptedRefreshToken) {
+      return res.status(403).json({ message: 'Invalid refresh token' });
+    }
+
+    // Generate a new access token
+    const newAccessToken = await signToken(
+      user.userId,
+      user.userRole,
+      process.env.JWT_SECRET,
+      permissions,
+      process.env.JWT_LIFESPAN,
+    );
+
+    // Send the new access token in a secure HTTP-only cookie
+    return res
+      .cookie('access_token', newAccessToken, {
+        httpOnly: true,
+        maxAge: 3600000, // 1 hour expiration
+      })
+      .status(200)
+      .json({ message: 'Access token refreshed' });
+  } catch (error) {
+    return res.status(500).json({ message: `Server Error: ${error.message}` });
+  }
+};
+
 //Logout
 const logoutUser = async (req, res) => {
   try {
-    res.cookie('access_token', '', {
-      httpOnly: true,
-      expires: new Date(0),
-    });
+    const { refresh_token } = req.cookies;
 
-    return res.status(200).json({ message: 'Logout successful' });
+    if (!refresh_token) {
+      return res.status(400).json({ message: 'No active session to log out' });
+    }
+
+    // Decode the refresh token to extract userId
+    const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
+
+    if (!decoded || !decoded.id) {
+      return res.status(403).json({ message: 'Invalid refresh token' });
+    }
+
+    // Find the user and remove or nullify their refresh token
+    const user = await User.findOne({ where: { userId: decoded.id } });
+
+    if (user) {
+      await User.update(
+        { refreshToken: null, refreshTokenIv: null },
+        { where: { userId: decoded.id } }
+      );
+    }
+
+    // Clear cookies to log out the user
+    res.clearCookie('access_token', { httpOnly: true });
+    res.clearCookie('refresh_token', { httpOnly: true });
+
+    return res.status(200).json({ message: 'User logged out successfully' });
   } catch (error) {
-    return res.status(500).json({ message: `Server Error ${error.message}` });
+    console.error(error);
+    return res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
 
@@ -589,4 +715,5 @@ export {
   sendOtp,
   verifyOtp,
   getCurrentUser,
+  getRefreshToken,
 };

@@ -11,6 +11,7 @@ import {
   getCurrentUser,
   getAllUsers,
   addUserWithEmployeeId,
+  getRefreshToken,
 } from '../../controllers/user.controller.js';
 import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
 
@@ -29,6 +30,8 @@ router.post(
 router.put('/password-update', createPassword);
 //Login User
 router.post('/login-user', loginUser);
+//Trigger Refresh Token
+router.post('/refresh-token', protect, getRefreshToken );
 //Get User Route
 router.get(
   '/get-user/:employeeId',
