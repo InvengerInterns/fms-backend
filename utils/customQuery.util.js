@@ -1,4 +1,5 @@
 import sequelize from '../config/dbConnection.config.js';
+import ClientDetails from '../models/clientDetails.model.js';
 
 const getCustomQueryResults = async (
   tables,
@@ -39,4 +40,23 @@ const getCustomQueryResults = async (
   }
 };
 
-export { getCustomQueryResults };
+const checkClientData = async (clientId,businessId) => {
+  try {
+    console.log('clientId',clientId);
+    console.log('businessId',businessId);
+    const clientData = await ClientDetails.findOne({where: {clientId}});
+    if (!clientData) {    
+      throw new Error('Client not found');
+    }
+    if (clientData.businessId !== parseInt(businessId)) {
+      throw new Error('Client not found for the given business ID');
+    }else {
+      return clientData;
+    }
+  }
+  catch(error){
+    throw error;
+  }
+}
+
+export { getCustomQueryResults,checkClientData };

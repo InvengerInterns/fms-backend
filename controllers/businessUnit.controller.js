@@ -1,4 +1,6 @@
+import e from 'express';
 import BusinessUnit from '../models/businessUnit.model.js';
+import { getCustomQueryResults } from '../utils/customQuery.util.js';
 
 // Create a new business unit
 const createBusinessUnit = async (req, res) => {
@@ -64,9 +66,65 @@ const getBusinessUnits = async (req, res) => {
   }
 };
 
+const getBusinessUnitMasterDetails = async (req, res) => {
+  try {
+    const tables = ['business_unit_masters', 'employees', 'clientdetails', 'business_units'];
+    const joins = [
+      { joinType: 'INNER', onCondition: 'business_unit_masters.employeeId = employees.employeeId' },
+      { joinType: 'INNER', onCondition: 'business_unit_masters.clientId = clientdetails.clientId' },
+      { joinType: 'INNER', onCondition: 'business_unit_masters.businessUnitId = business_units.businessId' },
+    ];
+    const attributes = [
+      'employees.employeeId',
+      'employees.employeeImage',
+      'CONCAT(employees.firstName, " ", employees.lastName) AS employeeName',
+      'clientdetails.clientName',
+      'business_units.businessName',
+      'business_unit_masters.startDate',
+      'business_unit_masters.endDate',
+      'business_unit_masters.status AS businessUnitStatus',
+      'employees.status AS employeeStatus',
+    ];
+    const whereCondition = null;
+
+    const businessUnitMasterDetails = await getCustomQueryResults(tables, joins, attributes, whereCondition);
+
+    if (!businessUnitMasterDetails || businessUnitMasterDetails.length === 0) {
+      return res.status(404).json({ message: 'No business unit master details found' });
+    }
+
+    // Add employeeWorkStatus to each record and exclude unwanted fields
+    const enhancedDetails = businessUnitMasterDetails.map((record) => {
+      let employeeWorkStatus = 'Active-Idle';
+      const { employeeStatus, endDate, startDate, businessUnitStatus, ...otherFields } = record;
+
+      if (employeeStatus === 1 && !endDate) {
+        employeeWorkStatus = 'Active';
+      } else if (employeeStatus === 1 && endDate ) {
+        employeeWorkStatus = 'Done';
+      } else if (employeeStatus === 2 && !startDate && !endDate) {
+        employeeWorkStatus = 'Active-Idle';
+      } else if (employeeStatus === 0 && businessUnitStatus === 'Served') {
+        employeeWorkStatus = 'Releived';
+      }
+
+      return {
+        ...otherFields, // Include all other fields except `employeeStatus` and `businessUnitStatus`
+        employeeWorkStatus, // Add `employeeWorkStatus`
+      };
+    });
+
+    res.status(200).json(enhancedDetails);
+  } catch (error) {
+    console.error('Error fetching business unit master details:', error);
+    res.status(500).json({ message: 'Error fetching business unit master details', error });
+  }
+};
+
 export {
   createBusinessUnit,
   updateBusinessUnit,
   deleteBusinessUnit,
   getBusinessUnits,
+  getBusinessUnitMasterDetails,
 };

@@ -54,3 +54,29 @@ export const encryptEmployeeId = (employeeId) => {
     throw new Error(`encryptEmployeeId: Encryption failed: ${error.message}`);
   }
 };
+
+export const decryptFilePathsInEmployeeData = (employeeData) => {
+  const fieldsToDecrypt = [
+    'employeeImage',
+    'passportphotoLink',
+    'normalphotoLink',
+    'resumelink',
+  ];
+
+  const decryptedData = { ...employeeData };
+
+  for (const field of fieldsToDecrypt) {
+    if (decryptedData[field]) {
+      try {
+        decryptedData[field] = decryptFilePath(decryptedData[field]);
+      } catch (error) {
+        console.error(
+          `Error decrypting file path for field "${field}":`,
+          error
+        );
+      }
+    }
+  }
+
+  return decryptedData;
+};

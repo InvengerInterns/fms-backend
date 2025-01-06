@@ -4,6 +4,7 @@ import {
   updateBusinessUnit,
   deleteBusinessUnit,
   getBusinessUnits,
+  getBusinessUnitMasterDetails,
 } from '../../controllers/businessUnit.controller.js';
 import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
 
@@ -32,5 +33,7 @@ router.delete(
 );
 //get business unit Route
 router.get('/get-business-unit', protect, getBusinessUnits);
+//get business master details route
+router.get('/get-business-unit-details', protect, allowedTo('admin'), getBusinessUnitMasterDetails);
 
 export default router;

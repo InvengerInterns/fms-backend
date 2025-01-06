@@ -2,10 +2,11 @@ import Employee from '../models/employee.model.js';
 import {
   encryptFilePath,
   decryptFilePath,
+  decryptFilePathsInEmployeeData,
 } from '../helper/filePathEncryption.helper.js';
-import { Op } from 'sequelize';
+import { Op, where } from 'sequelize';
 import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
-import { getCustomQueryResults } from '../utils/customQuery.util.js';
+import { checkClientData, getCustomQueryResults } from '../utils/customQuery.util.js';
 import { employeeStatus } from '../constants.js';
 import BusinessUnitMaster from '../models/buisnessUnitMaster.model.js';
 import sequelize from '../config/dbConnection.config.js';
@@ -16,33 +17,6 @@ const processUploadedFiles = (uploadedFiles) => {
     fileMap[file.fieldName] = file.savedPath.replace('/', 'uploads/');
     return fileMap;
   }, {});
-};
-
-// Helper function to decrypt file paths in employee data
-const decryptFilePathsInEmployeeData = (employeeData) => {
-  const fieldsToDecrypt = [
-    'employeeImage',
-    'passportphotoLink',
-    'normalphotoLink',
-    'resumelink',
-  ];
-
-  const decryptedData = { ...employeeData };
-
-  for (const field of fieldsToDecrypt) {
-    if (decryptedData[field]) {
-      try {
-        decryptedData[field] = decryptFilePath(decryptedData[field]);
-      } catch (error) {
-        console.error(
-          `Error decrypting file path for field "${field}":`,
-          error
-        );
-      }
-    }
-  }
-
-  return decryptedData;
 };
 
 // Create a new employee
@@ -76,6 +50,16 @@ const createEmployee = async (req, res) => {
       Object.assign(employeeData, fileMap); // Merge file paths into employee data
     }
 
+    const isValidClient = await checkClientData(employeeData.clientId, employeeData.businessUnitId);
+    if (!isValidClient) {
+      return res.status(400).json({
+        message: 'Client with ID is not associated with the business unit',
+      });
+    }
+
+    if (employeeData.clientId && employeeData.businessUnitId) {
+       employeeData.status = 1;
+    }
     // Create a new employee
     const newEmployee = await Employee.create(employeeData);
 
@@ -85,12 +69,7 @@ const createEmployee = async (req, res) => {
     const buisnessUnitData = await BusinessUnitMaster.create(employeeData);
 
     res.status(201).json({
-      message: 'Employee created successfully',
-      employeeData: {
-        'basic-details': newEmployee,
-        'professional-details': newEmployeeProfile,
-        'client-data': buisnessUnitData,
-      },
+      message: `Employee Profile for ${newEmployee.firstName +" "+ newEmployee.lastName}  created successfully`,
     });
   } catch (error) {
     console.error('Error creating employee:', error);
@@ -139,6 +118,13 @@ const updateEmployeeDetails = async (req, res) => {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
+    const isValidClient = await checkClientData(updateData.clientId, updateData.businessUnitId);
+    if (!isValidClient) {
+      return res.status(400).json({
+        message: 'Client with ID is not associated with the business unit',
+      });
+    }
+
     // Validate `updateData.startDate`
     if (!updateData.startDate) {
       return res
@@ -180,6 +166,12 @@ const updateEmployeeDetails = async (req, res) => {
             },
             { transaction }
           );
+          await employee.update(
+            {
+              status: 2,
+            },
+            { transaction }
+          );
         }
       }
 
@@ -193,13 +185,18 @@ const updateEmployeeDetails = async (req, res) => {
           },
           { transaction }
         );
+        await employee.update(
+          {
+            status: 1,
+          },
+          { transaction }
+        );
       }
     });
 
     // Respond with success
     res.status(200).json({
       message: 'Employee details updated successfully',
-      employee,
     });
   } catch (error) {
     console.error('Error updating employee details:', error);
