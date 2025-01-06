@@ -8,6 +8,7 @@ import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMas
 import { getCustomQueryResults } from '../utils/customQuery.util.js';
 import { employeeStatus } from '../constants.js';
 import BusinessUnitMaster from '../models/buisnessUnitMaster.model.js';
+import sequelize from '../config/dbConnection.config.js';
 
 //Helper function to process uploaded files.
 const processUploadedFiles = (uploadedFiles) => {
@@ -105,9 +106,13 @@ const updateEmployeeDetails = async (req, res) => {
   try {
     const { employeeId } = req.params; // Extract employeeId from request parameters
     const updateData = req.body; // Extract fields to update from request body
-    delete updateData.status; // Exclude 'status' from update data
 
-    // If uploadedFiles exist, process them
+    // Exclude 'status' from update data
+    if (updateData.status) {
+      delete updateData.status;
+    }
+
+    // Process uploaded files if present
     let uploadedFiles = [];
     if (typeof updateData.uploadedFiles === 'string') {
       uploadedFiles = JSON.parse(updateData.uploadedFiles); // Parse if it's a string
@@ -120,59 +125,82 @@ const updateEmployeeDetails = async (req, res) => {
       Object.assign(updateData, fileMap); // Merge file paths into update data
     }
 
-    const employee = await Employee.findOne({
-      where: {
-        employeeId,
-      },
-    }); // Fetch employee by ID
-
+    // Fetch the employee details
+    const employee = await Employee.findOne({ where: { employeeId } });
     const employeeProfile = await EmployeeProfessionalDetailsMaster.findOne({
-      where: {
-        employeeId,
-      },
+      where: { employeeId },
     });
-
     const mostRecentBusinessUnit = await BusinessUnitMaster.findOne({
-      where: {
-        employeeId,
-        endDate: null, // Get the record with no endDate
-      },
-      order: [['createdAt', 'DESC']], // Get the most recent record based on creation time
+      where: { employeeId, endDate: null },
+      order: [['updatedAt', 'DESC']],
     });
 
-    if (employee) {
-      // Update employee details
-      await employee.update(updateData);
-      // Update employee professional details
-      await employeeProfile.update(updateData);
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
 
-      if (updateData.endDate) {
-        if (mostRecentBusinessUnit) {
-          // Update endDate and set status to 'Served'
-          await mostRecentBusinessUnit.update({
-            endDate: updateData.endDate,
-            status: 'Served',
-          });
+    // Validate `updateData.startDate`
+    if (!updateData.startDate) {
+      return res
+        .status(400)
+        .json({ message: 'Missing startDate in the update data' });
+    }
+
+    // Normalize dates to `YYYY-MM-DD` format
+    const normalizeDate = (date) =>
+      new Date(date).toISOString().split('T')[0];
+
+    const updateStartDate = normalizeDate(updateData.startDate);
+    const mostRecentStartDate = mostRecentBusinessUnit
+      ? normalizeDate(mostRecentBusinessUnit.startDate)
+      : null;
+
+    // Start a transaction to ensure consistency
+    await sequelize.transaction(async (transaction) => {
+      // Update employee details
+      await employee.update(updateData, { transaction });
+
+      // Update employee professional details
+      await employeeProfile.update(updateData, { transaction });
+
+      console.log(
+        'mostRecentBusinessUnit:',
+        mostRecentStartDate,
+        'UpdateData:',
+        updateStartDate
+      );
+
+      // Handle endDate update for the most recent business unit
+      if (updateData.endDate && mostRecentBusinessUnit) {
+        if (mostRecentStartDate === updateStartDate && mostRecentBusinessUnit.status === 'Active') {
+          await mostRecentBusinessUnit.update(
+            {
+              endDate: updateData.endDate,
+              status: 'Served',
+            },
+            { transaction }
+          );
         }
       }
+
       // Handle startDate changes
-      if (
-        mostRecentBusinessUnit.startDate !== updateData.startDate // startDate has changed
-      ) {
-        // Insert a new record
-        await BusinessUnitMaster.create({
-          employeeId,
-          startDate: updateData.startDate,
-          ...updateData, // Include other fields if necessary
-        });
-      } 
-      
-      res
-        .status(200)
-        .json({ message: 'Employee details updated successfully', employee });
-    } else {
-      res.status(404).json({ message: 'Employee not found' }); // Employee not found
-    }
+      if (!mostRecentBusinessUnit || (mostRecentStartDate !== updateStartDate && mostRecentBusinessUnit.status !== 'Active')) {
+        await BusinessUnitMaster.create(
+          {
+            employeeId,
+            startDate: updateStartDate,
+            ...updateData,
+          },
+          { transaction }
+        );
+      }
+    });
+
+    // Respond with success
+    res.status(200).json({
+      message: 'Employee details updated successfully',
+      employee,
+    });
   } catch (error) {
     console.error('Error updating employee details:', error);
     res.status(500).json({
