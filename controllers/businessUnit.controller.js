@@ -1,6 +1,7 @@
 import e from 'express';
 import BusinessUnit from '../models/businessUnit.model.js';
 import { getCustomQueryResults } from '../utils/customQuery.util.js';
+import { decryptFilePathsInEmployeeData } from '../helper/filePathEncryption.helper.js';
 
 // Create a new business unit
 const createBusinessUnit = async (req, res) => {
@@ -98,6 +99,7 @@ const getBusinessUnitMasterDetails = async (req, res) => {
       let employeeWorkStatus = 'Active-Idle';
       const { employeeStatus, endDate, startDate, businessUnitStatus, ...otherFields } = record;
 
+      const employeeData = otherFields ? decryptFilePathsInEmployeeData(otherFields): null;
       if (employeeStatus === 1 && !endDate) {
         employeeWorkStatus = 'Active';
       } else if (employeeStatus === 1 && endDate ) {
@@ -109,8 +111,8 @@ const getBusinessUnitMasterDetails = async (req, res) => {
       }
 
       return {
-        ...otherFields, // Include all other fields except `employeeStatus` and `businessUnitStatus`
-        employeeWorkStatus, // Add `employeeWorkStatus`
+        employeeData, // Include all other fields except `employeeStatus` and `businessUnitStatus`
+        employeeWorkStatus // Add `employeeWorkStatus`
       };
     });
 
