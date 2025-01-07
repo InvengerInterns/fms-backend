@@ -18,6 +18,8 @@ import { decryptToken } from '../helper/token.helper.js';
 import { Op } from 'sequelize';
 import { createPermissions } from '../helper/user.helper.js';
 import { getActiveUser } from '../models/index.model.js';
+import { sendResponse } from '../utils/index.util.js';
+import { send } from 'process';
 
 dotenv.config();
 
@@ -32,16 +34,13 @@ const loginUser = async (req, res) => {
     const user = await getActiveUser(email);
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: 'User does not exist! Please Register.' });
+      return sendResponse(res, 401, 'User Not Exists');
     }
 
-    console.log('User:', user);
     // Check if password matches
     const isMatching = await checkPassword(password, user.userPassword);
     if (!isMatching) {
-      return res.status(401).json({ message: 'Invalid Username or Password' });
+      return sendResponse(res, 401, 'Invalid Credentials');
     }
 
     const permissions = await getPermissionsForUser(user.userId);
@@ -85,22 +84,16 @@ const registerUser = async (req, res) => {
     const validPassword = await isValidPassword(confirmPassword);
 
     if (!validPassword) {
-      return res.status(404).json({
-        message: 'Password is not meeting requirements',
-      });
+      return sendResponse(res, 404, 'Password is not meeting requirements');
     }
     if (confirmPassword != password) {
-      return res.status(404).json({
-        message: 'Passwords Do Not Match!!',
-      });
+      return sendResponse(res, 404, 'Passwords Do Not Match!!');
     }
 
     const hashedPassword = await hashPassword(confirmPassword);
 
     if (!email.endsWith('@invenger.com')) {
-      return res.status(404).json({
-        message: 'Usage of Work Email is preffered',
-      });
+      return sendResponse(res, 404, 'Invalid Email Domain');
     }
 
     const existingUser = await User.findAll({
@@ -110,9 +103,7 @@ const registerUser = async (req, res) => {
     });
 
     if (!existingUser) {
-      return res.status(400).json({
-        message: 'User Already Exists!!',
-      });
+      return sendResponse(res, 404, 'User Already Exists!!');
     }
 
     const newUser = await User.create({
@@ -124,13 +115,10 @@ const registerUser = async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({
-      message: 'User Created Successfully',
-      data: { email: newUser.userEmail, role: newUser.userRole },
-    });
+    sendResponse(res, 201, 'User Created Successfully');
+
   } catch (error) {
-    res.status(500).json({ message: `Internal Server Error` });
-    throw error;
+    return sendResponse(res, 500, `Internal Server Error: ${error.message}`);
   }
 };
 
@@ -160,21 +148,15 @@ const addUserWithEmployeeId = async (req, res) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({
-        message: 'User Already Exists!!',
-      });
+      return sendResponse(res, 404, 'User Already Exists!!');
     }
 
     if (!employeeProfessionalData) {
-      return res.status(404).json({
-        message: 'Employee Professional Data Not Found',
-      });
+      return sendResponse(res, 404, 'Employee Professional Data Not Found');
     }
 
     if (!employeeData) {
-      return res.status(404).json({
-        message: 'Employee Not Found',
-      });
+      return sendResponse(res, 404, 'Employee Data Not Found');
     }
 
     const newUser = await User.create({
@@ -201,17 +183,11 @@ const addUserWithEmployeeId = async (req, res) => {
       link: link,
     });
     const subject = 'User Password Creation FMS-TEST';
-    console.log('Sending email to:-', employeeData.workEmail);
     await sendMail(employeeProfessionalData.workEmail, subject, htmlBody);
 
-    res.status(201).json({
-      message: 'User Created and Email for password creation has been Sent',
-      permissions: newUserPermissions,
-    });
+    return sendResponse(res, 201, 'User Created Successfully');
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: `Internal Server Error: ${error.message}` });
+    return sendResponse(res, 500, `Internal Server Error: ${error.message}`);
   }
 };
 
@@ -226,20 +202,16 @@ const getUserByEmployeeId = async (req, res) => {
     });
 
     if (existingUserById.length == 0) {
-      return res.status(404).json({
-        message: 'No user found with this Employee ID.',
-      });
+      return sendResponse(res, 404, 'User Not Found');
     }
 
     const permissions = await getPermissionsForUser(existingUserById.userId);
 
-    return res.status(200).json({
-      data: {
-        email: existingUserById.userEmail,
-        role: existingUserById.userRole,
-        employeeNumber: existingUserById.employeeId,
-        permissions: permissions,
-      },
+    return sendResponse(res, 200, {
+      email: existingUserById.userEmail,
+      role: existingUserById.userRole,
+      employeeNumber: existingUserById.employeeId,
+      permissions: permissions,
     });
   } catch (error) {
     console.error('Error fetching user:', error);
