@@ -53,7 +53,7 @@ const getPermissionsForUser = async (userId) => {
           'permissions.permissionId = permissions_masters.permissionId',
       },
     ];
-    const attributes = ['permissionName', 'status'];
+    const attributes = ['permissions.permissionId AS id','permissionName', 'status'];
     const whereCondition = `login_details.userId = ${userId}`;
 
     const result = await getCustomQueryResults(
@@ -65,6 +65,7 @@ const getPermissionsForUser = async (userId) => {
 
     return result.map((permission) => {
       return {
+        permissionId: permission.id,
         permissionName: permission.permissionName,
         status: permission.status,
       };

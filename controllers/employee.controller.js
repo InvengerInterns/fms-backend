@@ -19,6 +19,7 @@ import {
   processUploadedFilesData,
   updateBusinessUnitAndEmployeeStatus,
 } from '../helper/employee.helper.js';
+import { calculateEmployeeWorkStatus } from '../helper/business-master.helper.js';
 
 //Helper function to process uploaded files.
 const processUploadedFiles = (uploadedFiles) => {
@@ -248,6 +249,75 @@ const getAllEmployees = async (req, res) => {
   }
 };
 
+// Get Employee Client History Based on their employee ID
+const getEmployeeClientHistory = async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+
+    const tables = [
+      'business_unit_masters',
+      'employees',
+      'clientdetails',
+      'business_units',
+    ];
+    const joins = [
+      {
+        joinType: 'INNER',
+        onCondition: 'business_unit_masters.employeeId = employees.employeeId',
+      },
+      {
+        joinType: 'INNER',
+        onCondition: 'business_unit_masters.clientId = clientdetails.clientId',
+      },
+      {
+        joinType: 'INNER',
+        onCondition:
+          'business_unit_masters.businessUnitId = business_units.businessId',
+      },
+    ];
+    const attributes = [
+      'employees.employeeId',
+      'employees.employeeImage',
+      'CONCAT(employees.firstName, " ", employees.lastName) AS employeeName',
+      'clientdetails.clientName',
+      'business_units.businessName',
+      'business_unit_masters.startDate',
+      'business_unit_masters.endDate',
+      'business_unit_masters.status AS businessUnitStatus',
+      'employees.status AS employeeStatus',
+    ];
+    const whereCondition = `business_unit_masters.employeeId = ${employeeId}`;
+
+    const employeeClientHistory = await getCustomQueryResults(
+      tables,
+      joins,
+      attributes,
+      whereCondition
+    );
+
+    const enhancedDetails = employeeClientHistory.map((record) => {
+      const employeeWorkStatus = calculateEmployeeWorkStatus(record);
+
+      const employeeData = record
+        ? decryptFilePathsInEmployeeData(record)
+        : null;
+
+      return {
+        employeeData, // Include all other fields except `employeeStatus` and `businessUnitStatus`
+        employeeWorkStatus, // Add `employeeWorkStatus`
+      };
+    });
+
+    res.status(200).json(enhancedDetails);
+
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error fetching employee client history',
+      error: error.message,
+    });
+  }
+};
+
 const updateEmployeeStatus = async (req, res) => {};
 
 export {
@@ -256,4 +326,5 @@ export {
   updateEmployeeDetails,
   createEmployee,
   updateEmployeeStatus,
+  getEmployeeClientHistory,
 };

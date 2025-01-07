@@ -12,7 +12,6 @@ import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
 import sendMail from '../utils/emailSend.util.js';
 import dotenv from 'dotenv';
-import { getCustomQueryResults } from '../utils/customQuery.util.js';
 import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
 import { encryptEmployeeId } from '../helper/filePathEncryption.helper.js';
 import { decryptToken } from '../helper/token.helper.js';
@@ -178,8 +177,6 @@ const addUserWithEmployeeId = async (req, res) => {
       });
     }
 
-    console.log('Employee Data:', employeeProfessionalData);
-
     const newUser = await User.create({
       userEmail: employeeProfessionalData.workEmail,
       userEmployeeId: employeeData.employeeId,
@@ -188,7 +185,6 @@ const addUserWithEmployeeId = async (req, res) => {
 
     await newUser.save();
 
-    console.log('New User:', newUser);
     const newUserData = await User.findOne({
       order: [['userId', 'DESC']],
     });
@@ -198,7 +194,6 @@ const addUserWithEmployeeId = async (req, res) => {
     const encryptedEmployeeId = await encryptEmployeeId(
       employeeData.employeeId
     );
-    console.log('Encrypted Employee Id:', encryptedEmployeeId);
     //link = `http://localhost:5000/api/v1/user/password-update/${employeeData.employeeId}`;
     link = `http://localhost:1234/setpassword/${encryptedEmployeeId}`;
     const htmlBody = await getHtmlContent('new-password', {
@@ -237,7 +232,7 @@ const getUserByEmployeeId = async (req, res) => {
     }
 
     const permissions = await getPermissionsForUser(existingUserById.userId);
-    
+
     return res.status(200).json({
       data: {
         email: existingUserById.userEmail,

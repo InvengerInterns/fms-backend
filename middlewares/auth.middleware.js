@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { promisify } from 'util';
 import User from '../models/user.model.js';
+import { getPermissionsForUser } from '../utils/user.util.js';
 
 dotenv.config();
 
@@ -40,7 +41,7 @@ const protect = async (req, res, next) => {
     );
 
     let currentUser = null;
-    console.log('Verified Token:', verifiedToken);
+
     if (verifiedToken.role === 'admin') {
       currentUser = await User.findOne({
         where: {
@@ -88,5 +89,33 @@ const allowedTo =
   };
 
 //Permission Based Access Middleware
+const permittedTo = (permissions) => async (req, res, next) => {
+  try {
+    const user = req.user;
+    const { permission, action } = permissions;
 
-export { protect, allowedTo };
+    if (user.role === 'super-admin') {
+      return next();
+    }
+
+    const userPermissions = await getPermissionsForUser(user.userId);
+
+    const hasPermission = action.some((act) =>
+      userPermissions.some(
+        (perm) => perm.permissionId === permission && perm.status === act
+      )
+    );
+
+    if (!hasPermission) {
+      return res.status(403).json({
+        message: 'You do not have permission to perform this action',
+      });
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export { protect, allowedTo, permittedTo };
