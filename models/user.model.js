@@ -27,7 +27,7 @@ const User = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    refreshTokenIv:{
+    refreshTokenIv: {
       type: DataTypes.STRING(255),
       allowNull: true,
     },

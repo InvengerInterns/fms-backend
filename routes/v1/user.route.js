@@ -31,7 +31,7 @@ router.put('/password-update', createPassword);
 //Login User
 router.post('/login-user', loginUser);
 //Trigger Refresh Token
-router.post('/refresh-token', protect, getRefreshToken );
+router.post('/refresh-token', protect, getRefreshToken);
 //Get User Route
 router.get(
   '/get-user/:employeeId',

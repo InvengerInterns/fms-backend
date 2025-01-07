@@ -5,7 +5,10 @@ dotenv.config();
 
 const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPT_SECRET, 'hex'); // 32 bytes for AES-256
 const IV_LENGTH = 16; // AES block size
-const EMPLOYEEID_ENCRYPTION_KEY = Buffer.from(process.env.EMPLOYEE_ENCRYPTOR_PUBLIC_KEY, 'hex'); // 32 bytes for AES-256
+const EMPLOYEEID_ENCRYPTION_KEY = Buffer.from(
+  process.env.EMPLOYEE_ENCRYPTOR_PUBLIC_KEY,
+  'hex'
+); // 32 bytes for AES-256
 
 // Encrypts the file path
 export const encryptFilePath = (filePath) => {
@@ -46,7 +49,11 @@ export const encryptEmployeeId = (employeeId) => {
     if (!employeeId) return employeeId; // Skip if value is null or undefined
     console.log('Encrypting employeeId:', employeeId);
     const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-cbc', EMPLOYEEID_ENCRYPTION_KEY, iv);
+    const cipher = crypto.createCipheriv(
+      'aes-256-cbc',
+      EMPLOYEEID_ENCRYPTION_KEY,
+      iv
+    );
     let encrypted = cipher.update(employeeId.toString(), 'utf8');
     encrypted = Buffer.concat([encrypted, cipher.final()]);
     return `${iv.toString('hex')}:${encrypted.toString('hex')}`;

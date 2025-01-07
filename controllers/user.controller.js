@@ -3,22 +3,22 @@ import {
   prepareOtp,
   hashPassword,
   isValidPassword,
-  getHtmlContent,
-} from '../middlewares/auth.middleware.js';
-import { signToken } from '../utils/user.util.js';
+} from '../utils/auth.util.js';
+import { getHtmlContent } from '../utils/prepareEmailBody.util.js';
+import { generateTokens, getPermissionsForUser } from '../utils/user.util.js';
 import User from '../models/user.model.js';
 import Employee from '../models/employee.model.js';
 import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
 import sendMail from '../utils/emailSend.util.js';
 import dotenv from 'dotenv';
-import PermissionsMaster from '../models/permissionsMaster.model.js';
-import { accessControls, permission_Ids, users } from '../constants.js';
 import { getCustomQueryResults } from '../utils/customQuery.util.js';
 import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
 import { encryptEmployeeId } from '../helper/filePathEncryption.helper.js';
-import { decryptToken, encryptToken } from '../helper/token.helper.js';
+import { decryptToken } from '../helper/token.helper.js';
 import { Op } from 'sequelize';
+import { createPermissions } from '../helper/user.helper.js';
+import { getActiveUser } from '../models/index.model.js';
 
 dotenv.config();
 
@@ -30,12 +30,7 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     // Fetch user by email with active status
-    const user = await User.findOne({
-      where: {
-        userEmail: email,
-        userStatus: 1, // Ensure user is active
-      },
-    });
+    const user = await getActiveUser(email);
 
     if (!user) {
       return res
@@ -43,46 +38,18 @@ const loginUser = async (req, res) => {
         .json({ message: 'User does not exist! Please Register.' });
     }
 
+    console.log('User:', user);
     // Check if password matches
     const isMatching = await checkPassword(password, user.userPassword);
     if (!isMatching) {
       return res.status(401).json({ message: 'Invalid Username or Password' });
     }
 
-    const tables = ['login_details', 'permissions_masters', 'permissions'];
-    const joins = [
-      {
-        joinType: '',
-        onCondition: 'login_details.userId = permissions_masters.userId',
-      },
-      {
-        joinType: '',
-        onCondition:
-          'permissions.permissionId = permissions_masters.permissionId',
-      },
-    ];
-    const attributes = ['permissionName', 'status'];
-    const whereCondition = `login_details.userId = ${user.userId}`;
-
-    const result = await getCustomQueryResults(
-      tables,
-      joins,
-      attributes,
-      whereCondition
-    );
-
-    const permissions = result.map((permission) => {
-      return {
-        permissionName: permission.permissionName,
-        status: permission.status,
-      };
-    });
+    const permissions = await getPermissionsForUser(user.userId);
 
     // Sign JWT token with user ID, role, and permissions
-    const accessToken = await signToken(user.userId, user.userRole, process.env.JWT_SECRET, permissions, process.env.JWT_LIFESPAN);
-    const refreshToken = await signToken(user.userId, user.userRole, process.env.REFRESH_TOKEN_SECRET, null, process.env.REFRESH_TOKEN_LIFESPAN);
-
-    const { encryptedToken, iv } = await encryptToken(refreshToken);
+    const { accessToken, refreshToken, encryptedToken, iv } =
+      await generateTokens(user.userId, user.userRole, permissions);
 
     await User.update(
       { refreshToken: encryptedToken, refreshTokenIv: iv },
@@ -212,7 +179,7 @@ const addUserWithEmployeeId = async (req, res) => {
     }
 
     console.log('Employee Data:', employeeProfessionalData);
-    
+
     const newUser = await User.create({
       userEmail: employeeProfessionalData.workEmail,
       userEmployeeId: employeeData.employeeId,
@@ -226,34 +193,11 @@ const addUserWithEmployeeId = async (req, res) => {
       order: [['userId', 'DESC']],
     });
 
-    const permissionsWithStatus = {
-      [permission_Ids.ABOUT]: accessControls.MODIFY,
-      [permission_Ids.INTERVIEWS]: accessControls.MODIFY,
-      [permission_Ids.SALARY_SLIP]: accessControls.NO_ACCESS,
-      [permission_Ids.OFFER_CONFIRMATION]: accessControls.NO_ACCESS,
-      [permission_Ids.OFFER_LETTER]: accessControls.NO_ACCESS,
-      [permission_Ids.ONBOARDING]: accessControls.NO_ACCESS,
-      [permission_Ids.BACKGROUND_VERIFICATION]: accessControls.WRITE,
-      [permission_Ids.PERFORMANCE_APPRAISAL]: accessControls.NO_ACCESS,
-      [permission_Ids.CERTIFICATION]: accessControls.READ,
-      [permission_Ids.HR_SCREENING]: accessControls.READ,
-      [permission_Ids.EXIT_FORMALITIES]: accessControls.NO_ACCESS,
-      [permission_Ids.CLIENT_HISTORY]: accessControls.READ,
-    };
+    const newUserPermissions = await createPermissions(newUserData.userId);
 
-    const newUserPermissions = await Promise.all(
-      Object.entries(permissionsWithStatus).map(
-        async ([permissionId, status]) => {
-          return await PermissionsMaster.create({
-            userId: newUserData.userId,
-            permissionId: parseInt(permissionId),
-            status: status,
-          });
-        }
-      )
+    const encryptedEmployeeId = await encryptEmployeeId(
+      employeeData.employeeId
     );
-
-    const encryptedEmployeeId = await encryptEmployeeId(employeeData.employeeId);
     console.log('Encrypted Employee Id:', encryptedEmployeeId);
     //link = `http://localhost:5000/api/v1/user/password-update/${employeeData.employeeId}`;
     link = `http://localhost:1234/setpassword/${encryptedEmployeeId}`;
@@ -270,7 +214,9 @@ const addUserWithEmployeeId = async (req, res) => {
       permissions: newUserPermissions,
     });
   } catch (error) {
-    res.status(500).json({ message: `Internal Server Error: ${error.message}` });
+    res
+      .status(500)
+      .json({ message: `Internal Server Error: ${error.message}` });
   }
 };
 
@@ -520,7 +466,13 @@ const getCurrentUser = async (req, res) => {
         where: {
           userId: decoded.id,
         },
-        attributes: ['userEmployeeId', 'userEmail', 'userRole', 'userStatus'],
+        attributes: [
+          'userId',
+          'userEmployeeId',
+          'userEmail',
+          'userRole',
+          'userStatus',
+        ],
       });
     } else {
       currentUser = await User.findOne({
@@ -528,38 +480,17 @@ const getCurrentUser = async (req, res) => {
           userId: decoded.id,
           userRole: rolesToCheck,
         },
-        attributes: ['userEmployeeId', 'userEmail', 'userRole', 'userStatus'],
+        attributes: [
+          'userId',
+          'userEmployeeId',
+          'userEmail',
+          'userRole',
+          'userStatus',
+        ],
       });
     }
 
-    const tables = ['login_details', 'permissions_masters', 'permissions'];
-    const joins = [
-      {
-        joinType: '',
-        onCondition: 'login_details.userId = permissions_masters.userId',
-      },
-      {
-        joinType: '',
-        onCondition:
-          'permissions.permissionId = permissions_masters.permissionId',
-      },
-    ];
-    const attributes = ['permissionName', 'status'];
-    const whereCondition = `login_details.userId = ${decoded.id}`;
-
-    const result = await getCustomQueryResults(
-      tables,
-      joins,
-      attributes,
-      whereCondition
-    );
-
-    const permissions = result.map((permission) => {
-      return {
-        permissionName: permission.permissionName,
-        status: permission.status,
-      };
-    });
+    const permissions = await getPermissionsForUser(currentUser.userId);
 
     if (currentUser) {
       res.status(200).json({
@@ -579,6 +510,7 @@ const getCurrentUser = async (req, res) => {
 //Get Refresh Token
 const getRefreshToken = async (req, res) => {
   try {
+    console.log('Cookies:', req.cookies);
     const { refresh_token } = req.cookies;
     let decoded;
 
@@ -592,7 +524,7 @@ const getRefreshToken = async (req, res) => {
     console.log('Decoded:', decoded);
 
     if (!decoded || !decoded.id) {
-      return res.status(401).json({ "message": 'Invalid refresh token' });
+      return res.status(401).json({ message: 'Invalid refresh token' });
     }
 
     // Fetch user by userId and ensure they have a valid refresh token
@@ -607,37 +539,15 @@ const getRefreshToken = async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized refresh token' });
     }
 
-    const tables = ['login_details', 'permissions_masters', 'permissions'];
-    const joins = [
-      {
-        joinType: '',
-        onCondition: 'login_details.userId = permissions_masters.userId',
-      },
-      {
-        joinType: '',
-        onCondition:
-          'permissions.permissionId = permissions_masters.permissionId',
-      },
-    ];
-    const attributes = ['permissionName', 'status'];
-    const whereCondition = `login_details.userId = ${user.userId}`;
+    console.log('User:', user);
 
-    const result = await getCustomQueryResults(
-      tables,
-      joins,
-      attributes,
-      whereCondition
-    );
-
-    const permissions = result.map((permission) => {
-      return {
-        permissionName: permission.permissionName,
-        status: permission.status,
-      };
-    });
+    const permissions = await getPermissionsForUser(user.userId);
 
     // Decrypt the refresh token stored in the database
-    const decryptedRefreshToken = await decryptToken(user.refreshToken, user.refreshTokenIv);
+    const decryptedRefreshToken = await decryptToken(
+      user.refreshToken,
+      user.refreshTokenIv
+    );
 
     // Compare the provided token with the decrypted token
     if (refresh_token !== decryptedRefreshToken) {
@@ -645,17 +555,15 @@ const getRefreshToken = async (req, res) => {
     }
 
     // Generate a new access token
-    const newAccessToken = await signToken(
+    const { accessToken } = await generateTokens(
       user.userId,
       user.userRole,
-      process.env.JWT_SECRET,
-      permissions,
-      process.env.JWT_LIFESPAN,
+      permissions
     );
 
     // Send the new access token in a secure HTTP-only cookie
     return res
-      .cookie('access_token', newAccessToken, {
+      .cookie('access_token', accessToken, {
         httpOnly: true,
         maxAge: 3600000, // 1 hour expiration
       })

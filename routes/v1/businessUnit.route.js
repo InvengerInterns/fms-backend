@@ -34,6 +34,11 @@ router.delete(
 //get business unit Route
 router.get('/get-business-unit', protect, getBusinessUnits);
 //get business master details route
-router.get('/get-business-unit-details', protect, allowedTo('admin'), getBusinessUnitMasterDetails);
+router.get(
+  '/get-business-unit-details',
+  protect,
+  allowedTo('admin'),
+  getBusinessUnitMasterDetails
+);
 
 export default router;

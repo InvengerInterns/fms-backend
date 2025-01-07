@@ -21,7 +21,11 @@ const encryptToken = async (token) => {
 
 const decryptToken = async (encryptedToken, iv) => {
   try {
-    const decipher = crypto.createDecipheriv(algorithm, key, Buffer.from(iv, 'hex'));
+    const decipher = crypto.createDecipheriv(
+      algorithm,
+      key,
+      Buffer.from(iv, 'hex')
+    );
     let decrypted = decipher.update(encryptedToken, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;

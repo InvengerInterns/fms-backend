@@ -6,10 +6,19 @@ import {
 } from '../helper/filePathEncryption.helper.js';
 import { Op, where } from 'sequelize';
 import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
-import { checkClientData, getCustomQueryResults } from '../utils/customQuery.util.js';
+import {
+  checkClientData,
+  getCustomQueryResults,
+} from '../utils/customQuery.util.js';
 import { employeeStatus } from '../constants.js';
 import BusinessUnitMaster from '../models/buisnessUnitMaster.model.js';
 import sequelize from '../config/dbConnection.config.js';
+import {
+  encryptFilePaths,
+  extractUploadedFiles,
+  processUploadedFilesData,
+  updateBusinessUnitAndEmployeeStatus,
+} from '../helper/employee.helper.js';
 
 //Helper function to process uploaded files.
 const processUploadedFiles = (uploadedFiles) => {
@@ -22,54 +31,37 @@ const processUploadedFiles = (uploadedFiles) => {
 // Create a new employee
 const createEmployee = async (req, res) => {
   try {
-    const employeeData = req.body; // Extract employee data from the request body
+    const employeeData = req.body;
 
-    // If uploadedFiles exist, process them
-    let uploadedFiles = [];
-    if (typeof employeeData.uploadedFiles === 'string') {
-      uploadedFiles = JSON.parse(employeeData.uploadedFiles); // Parse if it's a string
-    } else if (Array.isArray(employeeData.uploadedFiles)) {
-      uploadedFiles = employeeData.uploadedFiles; // Use directly if it's already an array
-    }
+    const uploadedFiles = extractUploadedFiles(employeeData);
 
     if (uploadedFiles.length > 0) {
-      // Encrypt file paths before storing
-      const encryptedFiles = uploadedFiles.map((file) => {
-        if (typeof file.savedPath === 'string') {
-          return {
-            ...file,
-            savedPath: encryptFilePath(file.savedPath), // Encrypt the savedPath
-          };
-        } else {
-          throw new Error('Invalid savedPath format. Expected a string.');
-        }
-      });
-
-      const fileMap = await processUploadedFiles(encryptedFiles); // Map field names to paths
-      console.log('fileMap:', fileMap);
-      Object.assign(employeeData, fileMap); // Merge file paths into employee data
+      const encryptedFiles = encryptFilePaths(uploadedFiles);
+      const fileMap = await processUploadedFiles(encryptedFiles);
+      Object.assign(employeeData, fileMap);
     }
 
-    const isValidClient = await checkClientData(employeeData.clientId, employeeData.businessUnitId);
-    if (!isValidClient) {
+    if (
+      !(await checkClientData(
+        employeeData.clientId,
+        employeeData.businessUnitId
+      ))
+    ) {
       return res.status(400).json({
         message: 'Client with ID is not associated with the business unit',
       });
     }
 
     if (employeeData.clientId && employeeData.businessUnitId) {
-       employeeData.status = 1;
+      employeeData.status = 1;
     }
-    // Create a new employee
+
     const newEmployee = await Employee.create(employeeData);
-
-    const newEmployeeProfile =
-      await EmployeeProfessionalDetailsMaster.create(employeeData);
-
-    const buisnessUnitData = await BusinessUnitMaster.create(employeeData);
+    await EmployeeProfessionalDetailsMaster.create(employeeData);
+    await BusinessUnitMaster.create(employeeData);
 
     res.status(201).json({
-      message: `Employee Profile for ${newEmployee.firstName +" "+ newEmployee.lastName}  created successfully`,
+      message: `Employee Profile for ${newEmployee.firstName + ' ' + newEmployee.lastName}  created successfully`,
     });
   } catch (error) {
     console.error('Error creating employee:', error);
@@ -80,31 +72,18 @@ const createEmployee = async (req, res) => {
   }
 };
 
-// Update employee details.
+//Update Employee Details
 const updateEmployeeDetails = async (req, res) => {
   try {
-    const { employeeId } = req.params; // Extract employeeId from request parameters
-    const updateData = req.body; // Extract fields to update from request body
+    const { employeeId } = req.params;
+    const updateData = req.body;
 
-    // Exclude 'status' from update data
     if (updateData.status) {
       delete updateData.status;
     }
 
-    // Process uploaded files if present
-    let uploadedFiles = [];
-    if (typeof updateData.uploadedFiles === 'string') {
-      uploadedFiles = JSON.parse(updateData.uploadedFiles); // Parse if it's a string
-    } else if (Array.isArray(updateData.uploadedFiles)) {
-      uploadedFiles = updateData.uploadedFiles; // Use directly if it's already an array
-    }
+    await processUploadedFilesData(updateData);
 
-    if (uploadedFiles.length > 0) {
-      const fileMap = processUploadedFiles(uploadedFiles); // Map field names to paths
-      Object.assign(updateData, fileMap); // Merge file paths into update data
-    }
-
-    // Fetch the employee details
     const employee = await Employee.findOne({ where: { employeeId } });
     const employeeProfile = await EmployeeProfessionalDetailsMaster.findOne({
       where: { employeeId },
@@ -118,83 +97,50 @@ const updateEmployeeDetails = async (req, res) => {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
-    const isValidClient = await checkClientData(updateData.clientId, updateData.businessUnitId);
+    const isValidClient = await checkClientData(
+      updateData.clientId,
+      updateData.businessUnitId
+    );
     if (!isValidClient) {
       return res.status(400).json({
         message: 'Client with ID is not associated with the business unit',
       });
     }
 
-    // Validate `updateData.startDate`
     if (!updateData.startDate) {
       return res
         .status(400)
         .json({ message: 'Missing startDate in the update data' });
     }
 
-    // Normalize dates to `YYYY-MM-DD` format
-    const normalizeDate = (date) =>
-      new Date(date).toISOString().split('T')[0];
+    const normalizeDate = (date) => new Date(date).toISOString().split('T')[0];
 
     const updateStartDate = normalizeDate(updateData.startDate);
     const mostRecentStartDate = mostRecentBusinessUnit
       ? normalizeDate(mostRecentBusinessUnit.startDate)
       : null;
 
-    // Start a transaction to ensure consistency
     await sequelize.transaction(async (transaction) => {
-      // Update employee details
       await employee.update(updateData, { transaction });
 
-      // Update employee professional details
       await employeeProfile.update(updateData, { transaction });
 
-      console.log(
-        'mostRecentBusinessUnit:',
+      const employeeContext = { employee, employeeId };
+
+      const businessUnitContext = {
+        mostRecentBusinessUnit,
+        updateData,
+        updateStartDate,
         mostRecentStartDate,
-        'UpdateData:',
-        updateStartDate
+      };
+
+      await updateBusinessUnitAndEmployeeStatus(
+        employeeContext,
+        businessUnitContext,
+        transaction
       );
-
-      // Handle endDate update for the most recent business unit
-      if (updateData.endDate && mostRecentBusinessUnit) {
-        if (mostRecentStartDate === updateStartDate && mostRecentBusinessUnit.status === 'Active') {
-          await mostRecentBusinessUnit.update(
-            {
-              endDate: updateData.endDate,
-              status: 'Served',
-            },
-            { transaction }
-          );
-          await employee.update(
-            {
-              status: 2,
-            },
-            { transaction }
-          );
-        }
-      }
-
-      // Handle startDate changes
-      if (!mostRecentBusinessUnit || (mostRecentStartDate !== updateStartDate && mostRecentBusinessUnit.status !== 'Active')) {
-        await BusinessUnitMaster.create(
-          {
-            employeeId,
-            startDate: updateStartDate,
-            ...updateData,
-          },
-          { transaction }
-        );
-        await employee.update(
-          {
-            status: 1,
-          },
-          { transaction }
-        );
-      }
     });
 
-    // Respond with success
     res.status(200).json({
       message: 'Employee details updated successfully',
     });
