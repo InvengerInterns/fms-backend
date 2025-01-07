@@ -1,7 +1,7 @@
 import PermissionsMaster from '../models/permissionsMaster.model.js';
 import { accessControls, permission_Ids, users } from '../constants.js';
 
-const createPermissions = async (req, res) => {
+const createPermissions = async (newUserData) => {
   try {
     const permissionsWithStatus = {
       [permission_Ids.ABOUT]: accessControls.MODIFY,
