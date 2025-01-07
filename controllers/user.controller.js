@@ -236,35 +236,8 @@ const getUserByEmployeeId = async (req, res) => {
       });
     }
 
-    const tables = ['login_details', 'permissions_masters', 'permissions'];
-    const joins = [
-      {
-        joinType: '',
-        onCondition: 'login_details.userId = permissions_masters.userId',
-      },
-      {
-        joinType: '',
-        onCondition:
-          'permissions.permissionId = permissions_masters.permissionId',
-      },
-    ];
-    const attributes = ['permissionName', 'status'];
-    const whereCondition = `login_details.userId = ${existingUserById.userId}`;
-
-    const result = await getCustomQueryResults(
-      tables,
-      joins,
-      attributes,
-      whereCondition
-    );
-
-    const permissions = result.map((permission) => {
-      return {
-        permissionName: permission.permissionName,
-        status: permission.status,
-      };
-    });
-
+    const permissions = await getPermissionsForUser(existingUserById.userId);
+    
     return res.status(200).json({
       data: {
         email: existingUserById.userEmail,
