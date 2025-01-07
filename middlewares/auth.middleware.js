@@ -94,7 +94,7 @@ const permittedTo = (permissions) => async (req, res, next) => {
     const user = req.user;
     const { permission, action } = permissions;
 
-    if (user.role === 'super-admin') {
+    if (user.userRole === 'super-admin') {
       return next();
     }
 
