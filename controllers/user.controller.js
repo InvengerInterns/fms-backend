@@ -16,7 +16,7 @@ import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMas
 import { encryptEmployeeId } from '../helper/filePathEncryption.helper.js';
 import { decryptToken } from '../helper/token.helper.js';
 import { Op } from 'sequelize';
-import { createPermissions } from '../helper/user.helper.js';
+import { createPermissions, updatePermissions } from '../helper/user.helper.js';
 import { getActiveUser } from '../models/index.model.js';
 import { sendResponse } from '../utils/index.util.js';
 import { send } from 'process';
@@ -208,6 +208,7 @@ const getUserByEmployeeId = async (req, res) => {
     const permissions = await getPermissionsForUser(existingUserById.userId);
 
     return sendResponse(res, 200, {
+      userId: existingUserById.userId,
       email: existingUserById.userEmail,
       role: existingUserById.userRole,
       employeeNumber: existingUserById.employeeId,
@@ -479,8 +480,6 @@ const getRefreshToken = async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized refresh token' });
     }
 
-    console.log('User:', user);
-
     const permissions = await getPermissionsForUser(user.userId);
 
     // Decrypt the refresh token stored in the database
@@ -513,6 +512,23 @@ const getRefreshToken = async (req, res) => {
     return res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
+
+//Assign permisssions to user
+const assignPermissions = async (req, res) => {
+  const { employeeId, permissions } = req.body;
+
+  try {
+    const user = await User.findOne({ where: { userEmployeeId:employeeId } });
+    if (!user) {
+      return sendResponse(res, 404, 'User Not Found');
+    }
+    await updatePermissions(user.userId, permissions);
+    return sendResponse(res, 200, 'Permissions Updated Successfully');
+  } catch (error) {
+    return sendResponse(res, 500, `Internal Server Error: ${error.message}`); 
+  }
+
+}
 
 //Logout
 const logoutUser = async (req, res) => {
@@ -564,4 +580,5 @@ export {
   verifyOtp,
   getCurrentUser,
   getRefreshToken,
+  assignPermissions,
 };

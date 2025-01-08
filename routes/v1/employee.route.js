@@ -18,21 +18,21 @@ const router = express.Router();
 router.post(
   '/add-employee',
   protect,
-  allowedTo('admin'),
+  allowedTo('admin', 'super-admin'),
   fileUploadMiddleware,
   createEmployee
 );
 
 // Get All Employee Route
 
-router.get('/get-all-employees', protect, allowedTo('admin'), getAllEmployees);
+router.get('/get-all-employees', protect, allowedTo('admin', 'super-admin'), getAllEmployees);
 
 // Get Employee By Id Route
 
 router.get(
   '/get-employee/:employeeId',
   protect,
-  allowedTo('admin'),
+  allowedTo('admin', 'super-admin'),
   getEmployeeById
 );
 
@@ -41,7 +41,7 @@ router.get(
 router.put(
   '/update-employee-details/:employeeId',
   protect,
-  allowedTo('admin'),
+  allowedTo('admin', 'super-admin'),
   fileUploadMiddleware,
   updateEmployeeDetails
 );
@@ -50,7 +50,7 @@ router.put(
 router.put(
   '/update-employee-status/:employeeId',
   protect,
-  allowedTo('admin'),
+  allowedTo('admin', 'super-admin'),
   fileUploadMiddleware,
   updateEmployeeStatus
 );

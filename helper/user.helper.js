@@ -22,7 +22,7 @@ const createPermissions = async (newUserData) => {
       Object.entries(permissionsWithStatus).map(
         async ([permissionId, status]) => {
           return await PermissionsMaster.create({
-            userId: newUserData.userId,
+            userId: newUserData,
             permissionId: parseInt(permissionId),
             status: status,
           });
@@ -35,4 +35,27 @@ const createPermissions = async (newUserData) => {
   }
 };
 
-export { createPermissions };
+const updatePermissions = async (userId, permissions) => {
+  try {
+    const permissionsMap = Array.isArray(permissions)
+      ? Object.fromEntries(permissions.map(p => [p.permissionId, p.status]))
+      : permissions;
+
+    const userPermissions = await PermissionsMaster.findAll({ 
+      where: { userId } 
+    });
+
+    for (const permission of userPermissions) {
+      if (permissionsMap[permission.permissionId] !== undefined) {
+        permission.status = permissionsMap[permission.permissionId];
+        await permission.save();
+      }
+    }
+
+    return userPermissions;
+  } catch (error) {
+    throw new Error(`Failed to update permissions: ${error.message}`);
+  }
+};
+
+export { createPermissions, updatePermissions };

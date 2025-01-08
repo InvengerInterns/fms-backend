@@ -42,7 +42,7 @@ const protect = async (req, res, next) => {
 
     let currentUser = null;
 
-    if (verifiedToken.role === 'admin') {
+    if (verifiedToken.role === 'super-admin') {
       currentUser = await User.findOne({
         where: {
           userId: verifiedToken.id,
@@ -93,6 +93,8 @@ const permittedTo = (permissions) => async (req, res, next) => {
   try {
     const user = req.user;
     const { permission, action } = permissions;
+
+    console.log('User:', user);
 
     if (user.userRole === 'super-admin') {
       return next();

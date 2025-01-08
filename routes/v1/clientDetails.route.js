@@ -14,35 +14,35 @@ const router = express.Router();
 router.post(
   '/add-client-details',
   protect,
-  allowedTo('admin'),
+  allowedTo('admin', 'super-admin'),
   createclientDetails
 );
 //update client details
 router.put(
   '/update-client-details/:clientId',
   protect,
-  allowedTo('admin'),
+  allowedTo('admin', 'super-admin'),
   updateclientDetails
 );
 //display all client details
 router.get(
   '/getall-client-details',
   protect,
-  allowedTo('admin'),
+  allowedTo('admin', 'super-admin'),
   getallclientDetails
 );
 //display individual client details
 router.get(
   '/get-client-details/:clientId',
   protect,
-  allowedTo('admin'),
+  allowedTo('admin', 'super-admin'),
   getclientDetails
 );
 
 router.get(
   '/clients/:businessId',
   protect,
-  allowedTo('admin'),
+  allowedTo('admin', 'super-admin'),
   getClientsByBusinessId
 );
 

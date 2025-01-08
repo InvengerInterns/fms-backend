@@ -12,6 +12,7 @@ import {
   getAllUsers,
   addUserWithEmployeeId,
   getRefreshToken,
+  assignPermissions,
 } from '../../controllers/user.controller.js';
 import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
 
@@ -36,18 +37,18 @@ router.post('/refresh-token', protect, getRefreshToken);
 router.get(
   '/get-user/:employeeId',
   protect,
-  allowedTo('admin'),
+  allowedTo('super-admin','admin'),
   getUserByEmployeeId
 );
 //Get All Users
-router.get('/get-users', protect, allowedTo('admin'), getAllUsers);
+router.get('/get-users', protect, allowedTo('super-admin','admin'), getAllUsers);
 //Get current user
 router.get('/get-me', protect, getCurrentUser);
 //Delete User by employeeId
 router.put(
   '/delete-user/:employeeId',
   protect,
-  allowedTo('admin'),
+  allowedTo('super-admin'),
   deleteUserByEmployeeId
 );
 //Logout User
@@ -56,5 +57,7 @@ router.post('/logout-user', protect, logoutUser);
 router.post('/send-otp', sendOtp);
 //Verify OTP
 router.post('/verify-otp/:email', verifyOtp);
+//Assign Permission to users
+router.put('/assign-permission', protect, allowedTo('super-admin'),assignPermissions);
 
 export default router;
