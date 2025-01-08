@@ -195,6 +195,7 @@ const addUserWithEmployeeId = async (req, res) => {
 const getUserByEmployeeId = async (req, res) => {
   const { employeeId } = req.params;
   try {
+
     const existingUserById = await User.findOne({
       where: {
         userEmployeeId: employeeId,
@@ -207,6 +208,7 @@ const getUserByEmployeeId = async (req, res) => {
 
     const permissions = await getPermissionsForUser(existingUserById.userId);
 
+    console.log('Permissions:', permissions);
     return sendResponse(res, 200, {
       userId: existingUserById.userId,
       email: existingUserById.userEmail,
@@ -215,7 +217,7 @@ const getUserByEmployeeId = async (req, res) => {
       permissions: permissions,
     });
   } catch (error) {
-    console.error('Error fetching user:', error);
+    return sendResponse(res, 500, `Internal Server Error `);
   }
 };
 

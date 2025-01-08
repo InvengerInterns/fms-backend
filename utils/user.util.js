@@ -63,6 +63,7 @@ const getPermissionsForUser = async (userId) => {
       whereCondition
     );
 
+    console.log('Permissions:', result);
     return result.map((permission) => {
       return {
         permissionId: permission.id,

@@ -1,10 +1,8 @@
 import Employee from '../models/employee.model.js';
 import {
-  encryptFilePath,
-  decryptFilePath,
   decryptFilePathsInEmployeeData,
 } from '../helper/filePathEncryption.helper.js';
-import { Op, where } from 'sequelize';
+import { Op } from 'sequelize';
 import EmployeeProfessionalDetailsMaster from '../models/employeeProfessionalMaster.model.js';
 import {
   checkClientData,
@@ -20,6 +18,7 @@ import {
   updateBusinessUnitAndEmployeeStatus,
 } from '../helper/employee.helper.js';
 import { calculateEmployeeWorkStatus } from '../helper/business-master.helper.js';
+import { sendResponse } from '../utils/index.util.js';
 
 //Helper function to process uploaded files.
 const processUploadedFiles = (uploadedFiles) => {
@@ -308,13 +307,9 @@ const getEmployeeClientHistory = async (req, res) => {
       };
     });
 
-    res.status(200).json(enhancedDetails);
-
+    return sendResponse(res,200,"",enhancedDetails)
   } catch (error) {
-    res.status(500).json({
-      message: 'Error fetching employee client history',
-      error: error.message,
-    });
+    return sendResponse(res,500,"Error",error.message)
   }
 };
 
