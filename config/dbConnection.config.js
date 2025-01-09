@@ -40,7 +40,7 @@ const sequelize = new Sequelize(
   process.env.DB_PASSWORD,
   {
     host: process.env.DB_HOST,
-    dialect: 'mysql',
+    dialect: process.env.DB_DIALECT,
     logging: false,
     pool: {
       max: 1000, // Maximum number of connection in pool

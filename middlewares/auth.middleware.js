@@ -9,7 +9,7 @@ dotenv.config();
 // JWT Verifying Token with Expiry Check
 const protect = async (req, res, next) => {
   try {
-    const rolesToCheck = ['user'];
+    const rolesToCheck = ['admin','user'];
 
     let token;
 

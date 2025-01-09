@@ -182,7 +182,7 @@ const addUserWithEmployeeId = async (req, res) => {
       username: employeeData.firstName,
       link: link,
     });
-    const subject = 'User Password Creation FMS-TEST';
+    const subject = 'User Password Creation:SAFILE-HRMS';
     await sendMail(employeeProfessionalData.workEmail, subject, htmlBody);
 
     return sendResponse(res, 201, 'User Created Successfully');
@@ -353,7 +353,7 @@ const sendOtp = async (req, res) => {
 
     userOTPMap.set(email, otp);
     const htmlBody = await getHtmlContent('otp', { otp: otp });
-    const subject = 'OTP - Verification FMS-TEST';
+    const subject = 'OTP - Verification';
     await sendMail(email, subject, htmlBody);
     res.status(200).json({ message: 'OTP sent to your email.' });
   } catch (error) {
