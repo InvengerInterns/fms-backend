@@ -176,8 +176,9 @@ const addUserWithEmployeeId = async (req, res) => {
     const encryptedEmployeeId = await encryptEmployeeId(
       employeeData.employeeId
     );
+    const expirationTime = Date.now() + 30 * 60 * 1000;
     //link = `http://localhost:5000/api/v1/user/password-update/${employeeData.employeeId}`;
-    link = `http://localhost:1234/setpassword/${encryptedEmployeeId}`;
+    link = `http://localhost:1234/setpassword/${encryptedEmployeeId}?expires=${expirationTime}`;
     const htmlBody = await getHtmlContent('new-password', {
       username: employeeData.firstName,
       link: link,
