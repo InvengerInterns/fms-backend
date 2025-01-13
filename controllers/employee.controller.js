@@ -19,6 +19,7 @@ import {
 } from '../helper/employee.helper.js';
 import { calculateEmployeeWorkStatus } from '../helper/business-master.helper.js';
 import { sendResponse } from '../utils/index.util.js';
+import moment from 'moment/moment.js';
 
 //Helper function to process uploaded files.
 const processUploadedFiles = (uploadedFiles) => {
@@ -90,7 +91,7 @@ const updateEmployeeDetails = async (req, res) => {
     });
     const mostRecentBusinessUnit = await BusinessUnitMaster.findOne({
       where: { employeeId, endDate: null },
-      order: [['updatedAt', 'DESC']],
+      order: [['createdAt', 'DESC']],
     });
 
     if (!employee) {
@@ -113,7 +114,9 @@ const updateEmployeeDetails = async (req, res) => {
         .json({ message: 'Missing startDate in the update data' });
     }
 
-    const normalizeDate = (date) => new Date(date).toISOString().split('T')[0];
+    const normalizeDate = (date) => {
+      return moment(date).local().format('YYYY-MM-DD'); // Adjusts to local time and formats correctly
+    };
 
     const updateStartDate = normalizeDate(updateData.startDate);
     const mostRecentStartDate = mostRecentBusinessUnit

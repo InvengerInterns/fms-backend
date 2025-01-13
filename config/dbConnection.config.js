@@ -48,7 +48,7 @@ const sequelize = new Sequelize(
       acquire: 30000, // Maximum time, in milliseconds, that a connection can be idle before being released
       idle: 10000, // Maximum time, in milliseconds, that pool will try to get connection before throwing error
     },
-    timezone: '+00:00', // Use the local time of the host
+    timezone: '+05:30', // Use the local time of the host
   }
 );
 
