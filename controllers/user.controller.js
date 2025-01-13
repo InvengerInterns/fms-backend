@@ -391,7 +391,7 @@ const verifyOtp = async (req, res) => {
 //Get current user
 const getCurrentUser = async (req, res) => {
   try {
-    const rolesToCheck = ['user'];
+    const rolesToCheck = ['user','admin'];
     let currentUser;
 
     let token;
@@ -404,7 +404,9 @@ const getCurrentUser = async (req, res) => {
 
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-    if (decoded.role === 'admin') {
+    console.log('Decoded:', decoded);
+
+    if (decoded.role === 'super-admin') {
       currentUser = await User.findOne({
         where: {
           userId: decoded.id,

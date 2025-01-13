@@ -15,6 +15,7 @@ import {
   assignPermissions,
 } from '../../controllers/user.controller.js';
 import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
+import { getMACAddress } from '../../test.js';
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ router.get(
 //Get All Users
 router.get('/get-users', protect, allowedTo('super-admin','admin'), getAllUsers);
 //Get current user
-router.get('/get-me', protect, getCurrentUser);
+router.get('/get-me', protect, getMACAddress, getCurrentUser);
 //Delete User by employeeId
 router.put(
   '/delete-user/:employeeId',
