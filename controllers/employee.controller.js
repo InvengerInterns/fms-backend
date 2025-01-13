@@ -61,9 +61,7 @@ const createEmployee = async (req, res) => {
     await EmployeeProfessionalDetailsMaster.create(employeeData);
     await BusinessUnitMaster.create(employeeData);
 
-    res.status(201).json({
-      message: `Employee Profile for ${newEmployee.firstName + ' ' + newEmployee.lastName}  created successfully`,
-    });
+    return sendResponse(res,200,`Employee profile of ${ newEmployee.firstName+""+newEmployee.lastName } Created Successfully`,"")
   } catch (error) {
     console.error('Error creating employee:', error);
     res.status(500).json({
@@ -144,15 +142,9 @@ const updateEmployeeDetails = async (req, res) => {
       );
     });
 
-    res.status(200).json({
-      message: 'Employee details updated successfully',
-    });
+    return sendResponse(res,200,"Employee Details Updated Successfully","")
   } catch (error) {
-    console.error('Error updating employee details:', error);
-    res.status(500).json({
-      message: 'Error updating employee details',
-      error: error.message,
-    });
+    return sendResponse(res,500,"Error",error.message)
   }
 };
 
@@ -192,16 +184,12 @@ const getEmployeeById = async (req, res) => {
       employeeProfile.dataValues
     );
 
-    res.status(200).json({
-      'basic-details': decryptedEmployee,
-      'professional-details': decryptedEmployeeProfile,
-    }); //Send the decrypted data
-  } catch (error) {
-    console.error('Error fetching employee:', error);
-    res.status(500).json({
-      message: 'Error fetching employee',
-      error: error.message,
+    return sendResponse(res,200,"",{
+      employee: decryptedEmployee,
+      employeeProfile: decryptedEmployeeProfile,
     });
+  } catch (error) {
+    return sendResponse(res,500,"Error",error.message)
   }
 };
 
@@ -241,13 +229,9 @@ const getAllEmployees = async (req, res) => {
       };
     });
 
-    res.status(200).json(decryptedEmployees); // Send the decrypted data
+    return sendResponse(res,200,"",decryptedEmployees);
   } catch (error) {
-    console.error('Error fetching employees:', error);
-    res.status(500).json({
-      message: 'Error fetching employees',
-      error: error.message,
-    });
+    return sendResponse(res,500,"Error",error.message)
   }
 };
 
