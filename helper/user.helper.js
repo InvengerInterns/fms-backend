@@ -16,6 +16,7 @@ const createPermissions = async (newUserData) => {
       [permission_Ids.HR_SCREENING]: accessControls.READ,
       [permission_Ids.EXIT_FORMALITIES]: accessControls.NO_ACCESS,
       [permission_Ids.CLIENT_HISTORY]: accessControls.READ,
+      [permission_Ids.USER_MANAGEMENT]: accessControls.NO_ACCESS,
     };
 
     const newUserPermissions = await Promise.all(

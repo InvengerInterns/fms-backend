@@ -20,6 +20,7 @@ import { createPermissions, updatePermissions } from '../helper/user.helper.js';
 import { getActiveUser } from '../models/index.model.js';
 import { sendResponse } from '../utils/index.util.js';
 import { send } from 'process';
+import PermissionsMaster from '../models/permissionsMaster.model.js';
 
 dotenv.config();
 
@@ -523,11 +524,18 @@ const assignPermissions = async (req, res) => {
 
   try {
     const user = await User.findOne({ where: { userEmployeeId:employeeId } });
+    const isPermissionsExists = await PermissionsMaster.findOne({ where: { userId: user.userId } });
+    console.log('Permissions:', isPermissionsExists);
     if (!user) {
       return sendResponse(res, 404, 'User Not Found');
     }
-    await updatePermissions(user.userId, permissions);
-    return sendResponse(res, 200, 'Permissions Updated Successfully');
+    if (!isPermissionsExists) {
+      await createPermissions(user.userId);
+      return sendResponse(res, 200, 'Permissions Created Successfully');
+    } else {
+      await updatePermissions(user.userId, permissions);
+      return sendResponse(res, 200, 'Permissions Updated Successfully');
+    }
   } catch (error) {
     return sendResponse(res, 500, `Internal Server Error: ${error.message}`); 
   }

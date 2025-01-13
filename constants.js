@@ -26,6 +26,7 @@ export const permission_Ids = {
   HR_SCREENING: 10,
   EXIT_FORMALITIES: 11,
   CLIENT_HISTORY: 12,
+  USER_MANAGEMENT: 13,
 };
 
 export const employeeStatus = {
