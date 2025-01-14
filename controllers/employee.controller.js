@@ -199,7 +199,7 @@ const getAllEmployees = async (req, res) => {
     const tables = ['employees', 'employee_professional_details_masters'];
     const joins = [
       {
-        joinType: '',
+        joinType: 'INNER',
         onCondition:
           'employees.employeeId = employee_professional_details_masters.employeeId',
       },
@@ -213,6 +213,8 @@ const getAllEmployees = async (req, res) => {
       attributes,
       whereCondition
     );
+
+    console.log('Results:', results);
 
     const decryptedEmployees = results.map((result) => {
       const decryptedData = decryptFilePathsInEmployeeData(result);
