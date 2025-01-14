@@ -3,6 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import moment from 'moment';
 import mime from 'mime-types'; // To validate file extensions
+import { v4 as uuidv4 } from 'uuid';
+import s3 from '../config/aws.config.js'; // Import the AWS config file
 import Employee from '../models/employee.model.js';
 
 // Allowed MIME types
@@ -23,9 +25,16 @@ const uploadDirectory = path.resolve('uploads');
 // Max file size (in bytes): e.g., 5 MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
+// Environment variable to determine storage mode
+const useS3 = process.env.STORAGE_MODE === 's3'; // Use 's3' or 'local'
+
 // Multer storage setup
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
+    if (useS3) {
+      return cb(null, ''); // No local storage folder for S3
+    }
+
     try {
       const { employeeId } = req.body;
 
@@ -74,7 +83,8 @@ const storage = multer.diskStorage({
 
     const extension = path.extname(file.originalname); // Extract file extension
     const today = moment().format('YYYY-MM-DD-HHMMss'); // Today's date in YYYYMMDD format
-    const newFilename = `${sanitizedFileName}_${today}_${employeeId}${extension}`;
+    const uuid = uuidv4();
+    const newFilename = `${sanitizedFileName}_${today}_${uuid}_${employeeId}${extension}`;
 
     cb(null, newFilename);
   },
@@ -102,7 +112,7 @@ const upload = multer({
 const fileUploadMiddleware = async (req, res, next) => {
   console.log('Incoming Request Body:', req.body);
 
-  upload(req, res, (err) => {
+  upload(req, res, async (err) => {
     if (err) {
       console.log('Error during file upload:', err.message);
       return res.status(400).json({ error: err.message });
@@ -111,16 +121,73 @@ const fileUploadMiddleware = async (req, res, next) => {
     if (req.files && req.files.length > 0) {
       console.log('Files uploaded successfully');
 
-      // Collect the file paths for each uploaded file
-      req.body.uploadedFiles = req.files.map((file) => {
-        // Extract the relative path for static access (e.g., '/uploads/{employeeId}/{filename}')
-        const filePath = file.path.replace(/^.*[\\\/](uploads[\\\/])/i, '$1');
-        return {
-          fieldName: file.fieldname,
-          originalName: file.originalname,
-          savedPath: `/${filePath.replace(/\\/g, '/')}`, // Ensures proper path for URL
-        };
-      });
+      req.body.uploadedFiles = [];
+
+      for (const file of req.files) {
+        const { employeeId } = req.body;
+
+        // Generate file path
+        const sanitizedEmployeeId = employeeId.replace(/[^a-zA-Z0-9_-]/g, '');
+        const extension = path.extname(file.originalname);
+        const today = moment().format('YYYY-MM-DD-HHMMss');
+
+        // Generate a unique UUID
+        const uuid = uuidv4();
+
+        // Combine all components to create the new filename
+        const newFilename = `${path
+          .parse(file.originalname)
+          .name.replace(
+            /[^a-zA-Z0-9_-]/g,
+            ''
+          )}_${today}_${uuid}_${sanitizedEmployeeId}${extension}`;
+          
+        if (useS3) {
+          // S3-specific handling
+          const tempFolder = path.resolve('temp');
+          await fs.ensureDir(tempFolder);
+
+          const tempFilePath = path.join(tempFolder, newFilename);
+          await fs.move(file.path, tempFilePath, { overwrite: true });
+
+          try {
+            const s3Params = {
+              Bucket: process.env.S3_BUCKET_NAME,
+              Key: `${sanitizedEmployeeId}/${newFilename}`,
+              Body: fs.createReadStream(tempFilePath),
+              ContentType: file.mimetype,
+              ACL: 'public-read',
+            };
+
+            const s3Response = await s3.upload(s3Params).promise();
+
+            req.body.uploadedFiles.push({
+              fieldName: file.fieldname,
+              originalName: file.originalname,
+              savedPath: s3Response.Location,
+            });
+
+            console.log(`Uploaded to S3: ${s3Response.Location}`);
+
+            await fs.remove(tempFilePath);
+          } catch (s3Error) {
+            console.error('Error uploading to S3:', s3Error.message);
+
+            if (fs.existsSync(tempFilePath)) {
+              await fs.remove(tempFilePath);
+            }
+
+            return res.status(500).json({ error: 'Error uploading to S3' });
+          }
+        } else {
+          // Local file storage handling
+          req.body.uploadedFiles.push({
+            fieldName: file.fieldname,
+            originalName: file.originalname,
+            savedPath: file.path.replace(/\\/g, '/'),
+          });
+        }
+      }
     } else {
       console.log('No files uploaded');
     }

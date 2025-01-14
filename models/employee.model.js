@@ -46,11 +46,11 @@ const Employee = sequelize.define(
       allowNull: true,
     },
     permanentAddress: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     currentAddress: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     emergencyContact: {
@@ -58,11 +58,11 @@ const Employee = sequelize.define(
       allowNull: true,
     },
     employeeImage: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     employeeImageLowResolution: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     passport: {
@@ -78,15 +78,15 @@ const Employee = sequelize.define(
       },
     },
     pancard: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(20),
       allowNull: true,
     },
     passportphotoLink: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     normalphotoLink: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     joinDate: {
@@ -98,7 +98,7 @@ const Employee = sequelize.define(
       allowNull: true,
     },
     jobDescription: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(500),
       allowNull: true,
     },
     status: {

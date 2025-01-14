@@ -18,6 +18,7 @@
     "@azure/identity": "^4.5.0",
     "@azure/msal-node": "^2.16.2",
     "@microsoft/microsoft-graph-client": "^3.0.7",
+    "aws-sdk": "^2.1692.0",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "clamav.js": "^0.12.0",

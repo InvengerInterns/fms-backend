@@ -59,7 +59,8 @@ const createEmployee = async (req, res) => {
 
     const newEmployee = await Employee.create(employeeData);
     await EmployeeProfessionalDetailsMaster.create(employeeData);
-    await BusinessUnitMaster.create(employeeData);
+    delete employeeData.status;
+    await BusinessUnitMaster.create(employeeData)
 
     return sendResponse(res,200,`Employee profile of ${ newEmployee.firstName+""+newEmployee.lastName } Created Successfully`,"")
   } catch (error) {
