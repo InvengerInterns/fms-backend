@@ -19,7 +19,6 @@ import { Op } from 'sequelize';
 import { createPermissions, updatePermissions } from '../helper/user.helper.js';
 import { getActiveUser } from '../models/index.model.js';
 import { sendResponse } from '../utils/index.util.js';
-import { send } from 'process';
 import PermissionsMaster from '../models/permissionsMaster.model.js';
 
 dotenv.config();
