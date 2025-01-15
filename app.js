@@ -69,6 +69,7 @@ app.use('/uploads', protect, allowedTo('admin'), async (req, res) => {
         ...s3Params,
         Expires: 60, // Signed URL expiration in seconds
       });
+      console.log('Generated signed URL:', signedUrl);
       return res.redirect(signedUrl); // Redirect to the signed URL
     } catch (error) {
       console.error('Error generating signed URL:', error.message);
