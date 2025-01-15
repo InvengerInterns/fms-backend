@@ -21,6 +21,10 @@ const Employee = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    gender: {
+      type: DataTypes.ENUM('Male', 'Female'),
+      allowNull: false,
+    },
     phoneNumber: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -33,10 +37,6 @@ const Employee = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    workEmail: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
     bloodGroup: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -46,11 +46,11 @@ const Employee = sequelize.define(
       allowNull: true,
     },
     permanentAddress: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     currentAddress: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     emergencyContact: {
@@ -58,7 +58,11 @@ const Employee = sequelize.define(
       allowNull: true,
     },
     employeeImage: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    employeeImageLowResolution: {
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     passport: {
@@ -74,18 +78,17 @@ const Employee = sequelize.define(
       },
     },
     pancard: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(20),
       allowNull: true,
     },
     passportphotoLink: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     normalphotoLink: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
-
     joinDate: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -95,14 +98,9 @@ const Employee = sequelize.define(
       allowNull: true,
     },
     jobDescription: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(500),
       allowNull: true,
     },
-    resumelink: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-
     status: {
       type: DataTypes.INTEGER,
       allowNull: true,

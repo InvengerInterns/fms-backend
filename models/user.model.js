@@ -10,7 +10,7 @@ const User = sequelize.define(
       autoIncrement: true,
     },
     userEmail: {
-      type: DataTypes.STRING(64),
+      type: DataTypes.STRING(100),
       unique: true,
     },
     userPassword: {
@@ -22,6 +22,14 @@ const User = sequelize.define(
     },
     userEmployeeId: {
       type: DataTypes.INTEGER,
+    },
+    refreshToken: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    refreshTokenIv: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
     },
     userStatus: {
       type: DataTypes.INTEGER,

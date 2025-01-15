@@ -9,7 +9,8 @@ export const users = {
 export const accessControls = {
   NO_ACCESS: 0, // No access to the resource
   READ: 1, // Read-only access
-  WRITE: 2, // Read and write access
+  WRITE: 2, // Read and Create access
+  MODIFY: 3, // Read, Create, Update and Delete access
 };
 
 export const permission_Ids = {
@@ -25,4 +26,11 @@ export const permission_Ids = {
   HR_SCREENING: 10,
   EXIT_FORMALITIES: 11,
   CLIENT_HISTORY: 12,
+  USER_MANAGEMENT: 13,
+};
+
+export const employeeStatus = {
+  ACTIVE: 'Active',
+  RELIEVED: 'Relieved',
+  ACTIVE_IDLE: 'Active-Idle',
 };

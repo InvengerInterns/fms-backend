@@ -9,7 +9,7 @@ import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/', protect, allowedTo('admin'), createPermission);
+router.post('/', protect, allowedTo('super-admin'), createPermission);
 router.put('/:permissionId', protect, allowedTo('admin'), updatePermission);
 router.delete('/:permissionId', protect, allowedTo('admin'), deletePermission);
 

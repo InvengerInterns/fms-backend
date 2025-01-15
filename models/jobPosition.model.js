@@ -1,21 +1,21 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/dbConnection.config.js';
 
-const Designation = sequelize.define(
-  'designation',
+const JobPositions = sequelize.define(
+  'job_position',
   {
-    designationId: {
+    id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    designationName: {
+    jobPositionName: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    designationStatus: {
+    departmentId: {
       type: DataTypes.INTEGER,
-      defaultValue: 1,
+      allowNull: true,
     },
   },
   {
@@ -23,5 +23,6 @@ const Designation = sequelize.define(
   }
 );
 
-Designation.sync({ alter: true });
-export default Designation;
+JobPositions.sync({ alter: true });
+
+export default JobPositions;

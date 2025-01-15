@@ -7,15 +7,13 @@ const createclientDetails = async (req, res) => {
     const { businessId } = req.body;
     const clientDetails = await ClientDetails.create({
       clientName: clientName,
-      clientDetailsStatus: clientDetailsStatus,
+      clientDetailsStatus: 2,
       businessId: businessId,
     });
     await clientDetails.save();
     res.status(201).json({ message: 'Created Client: ', data: clientDetails });
-
-    res.status(201).json({ message: 'Created Client: ', data: clientDetails });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 

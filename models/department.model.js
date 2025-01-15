@@ -12,10 +12,7 @@ const Department = sequelize.define(
     departmentName: {
       type: DataTypes.STRING(128),
     },
-    buisnessId: {
-      type: DataTypes.INTEGER,
-    },
-    managerId: {
+    buisnessUnitId: {
       type: DataTypes.INTEGER,
     },
     buisnessStatus: {

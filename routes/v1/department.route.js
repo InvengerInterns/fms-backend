@@ -7,12 +7,14 @@ import { allowedTo, protect } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/add-department', protect, allowedTo('admin'), createDepartment);
+router.post('/add-department', protect, allowedTo('admin', 'super-admin'), createDepartment);
 
 //update ManagerId or Department name
 router.put(
   '/update-department/:deparmentId',
   protect,
-  allowedTo('admin'),
+  allowedTo('admin', 'super-admin'),
   updateDepartmentDetails
 );
+
+export default router;
